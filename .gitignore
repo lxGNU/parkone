@@ -1,0 +1,47 @@
+# Binarios compilados
+*.class
+bin/
+target/
+build/
+dist/
+out/
+
+# Bases de datos locales y archivos temporales
+*.mv.db
+*.trace.db
+parkone_local.*
+data/
+*.sock
+*.pid
+
+# Paquetes y archivos comprimidos de entrega
+*.zip
+*.rar
+*.tar.gz
+
+# Archivos de entorno y propiedades locales con credenciales
+.env
+*.local.properties
+
+# Configuraciones de IDEs
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.nb-gradle/
+nbproject/private/
+
+# Logs y temporales
+*.log
+*.tmp
+.~lock.*
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos markdown
+*.md
+
+# Material de referencia
+contexto ia/
