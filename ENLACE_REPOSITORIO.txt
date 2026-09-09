@@ -1,0 +1,21 @@
+
+https://github.com/lxGNU/parkone
+
+
+1. Para clonar el repositorio:
+   git clone https://github.com/lxGNU/parkone.git
+
+2. Para compilar y ejecutar en Linux / Mac:
+   ./compile.sh
+   ./run.sh            (Abre la ventana grafica)
+   ./run.sh --consola  (Abre el menu por consola)
+   ./test.sh           (Ejecuta las pruebas del CRUD)
+
+3. Para compilar y ejecutar en Windows:
+   Doble clic en compile.bat
+   Doble clic en run.bat
+   Doble clic en test.bat
+
+4. Base de datos MySQL:
+   El script con la estructura de la base de datos se encuentra en:
+   sql/parkone_db.sql
