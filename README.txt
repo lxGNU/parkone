@@ -1,14 +1,3 @@
-# Proyecto ParkOne - Codificación del Módulo de Usuarios
-**Evidencia:** GA7-220501096-AA2-EV01: Codificación de módulos del software  
-**Programa:** Tecnólogo en Análisis y Desarrollo de Software (ADSO)  
-**Ficha:** 3336118  
-**Centro:** Centro de Teleinformática y Producción Industrial - SENA Regional Cauca  
-**Aprendiz:** Brandon Yair Galvis Diaz  
-**Año:** 2026  
-
----
-
-## 1. Introducción
 Para este taller realicé la codificación del **Módulo de Gestión de Usuarios y Colaboradores** de nuestro proyecto de parqueadero, **ParkOne**. 
 
 Tomé como base lo que veníamos trabajando en las evidencias anteriores:
