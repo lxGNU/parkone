@@ -1,0 +1,27 @@
+==================================================================
+ENLACE DEL REPOSITORIO - EVIDENCIA GA7-220501096-AA2-EV02
+==================================================================
+
+Programa: Tecnologo en Analisis y Desarrollo de Software (ADSO)
+Ficha: 3336118
+Aprendiz: Brandon Yair Galvis Diaz
+Centro: SENA Regional Cauca
+
+Enlace del Repositorio en GitHub:
+https://github.com/lxGNU/parkone.git
+
+Instrucciones para ejecutar:
+
+1. Clonar el repositorio:
+   git clone https://github.com/lxGNU/parkone.git
+
+2. En Linux / Mac:
+   ./compile.sh
+   ./run.sh
+
+3. En Windows:
+   Ejecutar compile.bat
+   Ejecutar run.bat
+
+4. Script de Base de Datos MySQL:
+   sql/parkone_db.sql

@@ -1,0 +1,18 @@
+# Binarios compilados
+bin/
+target/
+*.class
+
+# Entorno e IDEs
+.idea/
+.settings/
+.classpath
+.project
+.vscode/
+*.iml
+
+# Archivos de SO y temporales
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
