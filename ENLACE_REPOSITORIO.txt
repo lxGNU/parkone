@@ -8,12 +8,15 @@ Aprendiz: Brandon Yair Galvis Diaz
 Centro: SENA Regional Cauca
 
 Enlace del Repositorio en GitHub:
-https://github.com/lxGNU/parkone.git
+https://github.com/lxGNU/parkone
+
+Rama (Branch) de esta evidencia:
+https://github.com/lxGNU/parkone/tree/master
 
 Instrucciones para ejecutar:
 
-1. Clonar el repositorio:
-   git clone https://github.com/lxGNU/parkone.git
+1. Clonar el repositorio rama master:
+   git clone -b master https://github.com/lxGNU/parkone.git
 
 2. En Linux / Mac:
    ./compile.sh
@@ -23,5 +26,13 @@ Instrucciones para ejecutar:
    Ejecutar compile.bat
    Ejecutar run.bat
 
-4. Script de Base de Datos MySQL:
+4. Abrir en el navegador:
+   http://localhost:8080/
+
+5. Script de Base de Datos MySQL:
    sql/parkone_db.sql
+
+Credenciales de prueba del sistema:
+   Cedula: 1061723849
+   Clave:  123456
+==================================================================
