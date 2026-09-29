@@ -3,10 +3,16 @@ package co.edu.sena.parkone.server;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import co.edu.sena.parkone.dao.UsuarioDAO;
-import co.edu.sena.parkone.dao.VehiculoDAO;
-import co.edu.sena.parkone.modelo.Usuario;
-import co.edu.sena.parkone.modelo.Vehiculo;
+
+import co.edu.sena.parkone.model.RegistroParqueadero;
+import co.edu.sena.parkone.model.Usuario;
+import co.edu.sena.parkone.model.Vehiculo;
+import co.edu.sena.parkone.repository.RegistroParqueaderoRepository;
+import co.edu.sena.parkone.repository.UsuarioRepository;
+import co.edu.sena.parkone.repository.VehiculoRepository;
+import co.edu.sena.parkone.service.ParqueaderoService;
+import co.edu.sena.parkone.service.UsuarioService;
+import co.edu.sena.parkone.service.VehiculoService;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -15,33 +21,58 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
-// Servidor local sencillo para ejecutar la app
+// Servidor Web local para ejecutar los modulos web y los endpoints de la API REST
 public class ServidorWeb {
 
-    private static final int PUERTO = 8080;
-    private static final UsuarioDAO usuarioDAO = new UsuarioDAO();
-    private static final VehiculoDAO vehiculoDAO = new VehiculoDAO();
+    private static UsuarioRepository usuarioRepo;
+    private static VehiculoRepository vehiculoRepo;
+    private static RegistroParqueaderoRepository registroRepo;
+
+    private static UsuarioService usuarioService;
+    private static VehiculoService vehiculoService;
+    private static ParqueaderoService parqueaderoService;
+
     private static Usuario usuarioSesionActiva = null;
 
-    public static void main(String[] args) throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(PUERTO), 0);
+    public static void iniciar(int puerto) throws IOException {
+        // Inicializar repositorios y servicios de la arquitectura por capas
+        usuarioRepo = new UsuarioRepository();
+        vehiculoRepo = new VehiculoRepository();
+        registroRepo = new RegistroParqueaderoRepository();
 
-        // Rutas principales
+        usuarioService = new UsuarioService(usuarioRepo);
+        vehiculoService = new VehiculoService(vehiculoRepo);
+        parqueaderoService = new ParqueaderoService(registroRepo, vehiculoService);
+
+        // Usuario por defecto logueado para facilitar la prueba
+        usuarioSesionActiva = usuarioService.obtenerPorId(1);
+
+        HttpServer server = HttpServer.create(new InetSocketAddress(puerto), 0);
+
+        // Rutas de Vistas Web Responsivas
         server.createContext("/", new ManejadorInicio());
         server.createContext("/login", new ManejadorLogin());
+        server.createContext("/control", new ManejadorControlParqueadero());
         server.createContext("/usuarios", new ManejadorUsuario());
         server.createContext("/vehiculos", new ManejadorVehiculo());
-        server.createContext("/css/style.css", new ManejadorArchivos("src/main/webapp/css/style.css", "text/css"));
+        server.createContext("/css/style.css", new ManejadorArchivos("src/main/resources/static/css/style.css", "text/css"));
+
+        // Rutas de la API REST JSON (Para App Móvil)
+        server.createContext("/api/dashboard", new ManejadorApiDashboard());
+        server.createContext("/api/vehiculos", new ManejadorApiVehiculos());
+        server.createContext("/api/registros", new ManejadorApiRegistros());
 
         server.setExecutor(null);
         System.out.println("=================================================");
-        System.out.println(" Servidor ParkOne listo");
+        System.out.println(" Servidor ParkOne iniciado exitosamente");
         System.out.println(" Aprendiz: Brandon Yair Galvis Diaz");
-        System.out.println(" Entrar a: http://localhost:" + PUERTO + "/");
+        System.out.println(" Abrir en navegador: http://localhost:" + puerto + "/");
+        System.out.println(" Endpoint API Rest:  http://localhost:" + puerto + "/api/dashboard");
         System.out.println("=================================================");
         server.start();
     }
 
+    // Manejador para el Dashboard Principal
     static class ManejadorInicio implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -50,95 +81,236 @@ public class ServidorWeb {
                 return;
             }
 
-            int totalU = usuarioDAO.listar().size();
-            int totalV = vehiculoDAO.listar().size();
+            Map<String, Object> stats = parqueaderoService.obtenerEstadisticas();
+            int cuposOcupados = (int) stats.get("cuposOcupados");
+            int cuposDisponibles = (int) stats.get("cuposDisponibles");
+            int capacidadMaxima = (int) stats.get("capacidadMaxima");
+            double recaudo = (double) stats.get("recaudoTotal");
 
-            String html =
-                "<div class='titulo-pagina'><h2>Panel Principal - Servlets y JSP</h2>" +
-                "<p>Sistema de Gestión de Parqueaderos ParkOne</p></div>" +
-                "<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;'>" +
-                "  <div class='card-container' style='text-align: center; border-top: 4px solid #0d6efd;'>" +
-                "    <h3 style='color: #9ca3af; font-size: 1rem;'>Usuarios Registrados</h3>" +
-                "    <div style='font-size: 3rem; font-weight: bold; color: white; margin: 0.5rem 0;'>" + totalU + "</div>" +
-                "    <a href='/usuarios' class='btn btn-primary btn-sm'>Ver Usuarios</a>" +
-                "  </div>" +
-                "  <div class='card-container' style='text-align: center; border-top: 4px solid #39a900;'>" +
-                "    <h3 style='color: #9ca3af; font-size: 1rem;'>Vehículos en Parqueadero</h3>" +
-                "    <div style='font-size: 3rem; font-weight: bold; color: #4ade80; margin: 0.5rem 0;'>" + totalV + "</div>" +
-                "    <a href='/vehiculos' class='btn btn-success btn-sm'>Ver Vehículos</a>" +
-                "  </div>" +
-                "</div>" +
-                "<div class='card-container'><h3>Partes del Sistema</h3>" +
-                "<ul style='margin-left: 1.5rem; margin-top: 1rem; color: #d1d5db; display: flex; flex-direction: column; gap: 0.5rem;'>" +
-                "  <li><strong>Servlets:</strong> UsuarioServlet, VehiculoServlet y LoginServlet.</li>" +
-                "  <li><strong>Formularios:</strong> Formularios HTML para guardar y editar.</li>" +
-                "  <li><strong>JSP:</strong> Paginas JSP con expresiones y partes reutilizables.</li>" +
-                "  <li><strong>Base de datos:</strong> Script MySQL (<code>parkone_db.sql</code>) y JDBC.</li>" +
-                "</ul></div>";
+            List<RegistroParqueadero> activos = parqueaderoService.obtenerActivos();
 
-            html = renderFullLayout("Inicio", html);
-            sendResponse(exchange, 200, html);
+            StringBuilder sb = new StringBuilder();
+            sb.append("<div class='titulo-pagina'><h2>Panel General de Control</h2>");
+            sb.append("<p>Móvil y Web - Sistema de Gestión de Parqueaderos ParkOne</p></div>");
+
+            // Tarjetas de estadisticas
+            sb.append("<div class='dashboard-grid'>");
+            
+            sb.append("  <div class='stat-card blue'>");
+            sb.append("    <div class='stat-title'>Capacidad Total</div>");
+            sb.append("    <div class='stat-value'>").append(capacidadMaxima).append("</div>");
+            sb.append("    <div class='stat-desc'>Bahías de parqueadero</div>");
+            sb.append("  </div>");
+
+            sb.append("  <div class='stat-card yellow'>");
+            sb.append("    <div class='stat-title'>Vehículos Estacionados</div>");
+            sb.append("    <div class='stat-value'>").append(cuposOcupados).append("</div>");
+            sb.append("    <div class='stat-desc'>Cupos ocupados en este momento</div>");
+            sb.append("  </div>");
+
+            sb.append("  <div class='stat-card green'>");
+            sb.append("    <div class='stat-title'>Cupos Libres</div>");
+            sb.append("    <div class='stat-value'>").append(cuposDisponibles).append("</div>");
+            sb.append("    <div class='stat-desc'>Disponibilidad para ingreso</div>");
+            sb.append("  </div>");
+
+            sb.append("  <div class='stat-card purple'>");
+            sb.append("    <div class='stat-title'>Recaudo Acumulado</div>");
+            sb.append("    <div class='stat-value'>$").append(String.format("%.2f", recaudo)).append("</div>");
+            sb.append("    <div class='stat-desc'>Ingresos por concepto de tarifas</div>");
+            sb.append("  </div>");
+
+            sb.append("</div>");
+
+            // Accesos rapidos y estado de vehiculos
+            sb.append("<div style='display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; margin-top:1.5rem;'>");
+            
+            // Columna 1: Acceso rapido a modulos
+            sb.append("<div class='card-container'><h3>Módulos del Sistema</h3>");
+            sb.append("<p style='color:#9ca3af; font-size:0.9rem; margin-bottom:1rem;'>Seleccione el módulo a gestionar:</p>");
+            sb.append("<div style='display:flex; flex-direction:column; gap:0.75rem;'>");
+            sb.append("  <a href='/control' class='btn btn-primary' style='justify-content:center;'>Entradas, Salidas y Cobro</a>");
+            sb.append("  <a href='/vehiculos' class='btn btn-success' style='justify-content:center;'>Gestión de Vehículos</a>");
+            sb.append("  <a href='/usuarios' class='btn btn-secondary' style='justify-content:center;'>Gestión de Usuarios</a>");
+            sb.append("  <a href='/api/dashboard' target='_blank' class='btn btn-outline' style='justify-content:center;'>Probar API REST (JSON para Móvil)</a>");
+            sb.append("</div></div>");
+
+            // Columna 2: Vehiculos en parqueadero en tiempo real
+            sb.append("<div class='card-container'><h3>Vehículos Estacionados Ahora</h3>");
+            if (activos.isEmpty()) {
+                sb.append("<p style='color:#9ca3af; padding:1rem 0;'>No hay vehículos en el parqueadero.</p>");
+            } else {
+                sb.append("<div class='table-responsive'><table class='data-table'><thead><tr><th>Placa</th><th>Tipo</th><th>Hora Ingreso</th><th>Tarifa/h</th></tr></thead><tbody>");
+                for (RegistroParqueadero r : activos) {
+                    sb.append("<tr>");
+                    sb.append("<td><strong style='color:#60a5fa;'>").append(escapeHtml(r.getPlacaVehiculo())).append("</strong></td>");
+                    sb.append("<td>").append(escapeHtml(r.getTipoVehiculo())).append("</td>");
+                    sb.append("<td>").append(r.getFechaEntradaFormateada()).append("</td>");
+                    sb.append("<td>$").append(String.format("%.0f", r.getTarifaAplicada())).append("</td>");
+                    sb.append("</tr>");
+                }
+                sb.append("</tbody></table></div>");
+            }
+            sb.append("</div>");
+
+            sb.append("</div>");
+
+            sendResponse(exchange, 200, renderFullLayout("Inicio", sb.toString()));
         }
     }
 
-    static class ManejadorLogin implements HttpHandler {
+    // Manejador del Módulo de Control de Parqueadero (Entradas, Salidas y Liquidación)
+    static class ManejadorControlParqueadero implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            String method = exchange.getRequestMethod();
-            Map<String, String> queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
-
-            if ("logout".equalsIgnoreCase(queryParams.get("accion"))) {
-                usuarioSesionActiva = null;
+            if (usuarioSesionActiva == null) {
                 redirect(exchange, "/login");
                 return;
             }
 
+            String method = exchange.getRequestMethod();
+            Map<String, String> queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
+
             if ("POST".equalsIgnoreCase(method)) {
                 String body = readRequestBody(exchange);
                 Map<String, String> postParams = parseQueryParams(body);
-                String user = postParams.get("usuario");
-                String pass = postParams.get("contrasena");
+                String accion = postParams.get("accion");
 
-                Usuario u = usuarioDAO.validarLogin(user, pass);
-                if (u != null) {
-                    usuarioSesionActiva = u;
-                    redirect(exchange, "/");
-                    return;
-                } else {
-                    renderFormularioLogin(exchange, "Datos incorrectos. Intente de nuevo.");
-                    return;
+                if ("ingresar".equalsIgnoreCase(accion)) {
+                    try {
+                        parqueaderoService.registrarIngreso(
+                            postParams.get("placa"),
+                            postParams.get("tipo"),
+                            postParams.get("propietario"),
+                            postParams.get("observaciones")
+                        );
+                    } catch (Exception e) {
+                        // Manejo de error si la placa ya esta en el parqueadero
+                    }
+                } else if ("salida".equalsIgnoreCase(accion)) {
+                    int idReg = Integer.parseInt(postParams.getOrDefault("idRegistro", "0"));
+                    parqueaderoService.registrarSalida(idReg);
                 }
+                redirect(exchange, "/control");
+                return;
             }
 
-            renderFormularioLogin(exchange, null);
+            String accion = queryParams.getOrDefault("accion", "listar");
+            if ("nuevo".equalsIgnoreCase(accion)) {
+                renderFormularioIngreso(exchange);
+            } else if ("ticket".equalsIgnoreCase(accion)) {
+                int idReg = Integer.parseInt(queryParams.getOrDefault("id", "0"));
+                renderTicketCobro(exchange, idReg);
+            } else {
+                renderListaControl(exchange, queryParams.get("filtro"));
+            }
         }
 
-        private void renderFormularioLogin(HttpExchange exchange, String errorMsg) throws IOException {
-            StringBuilder sb = new StringBuilder();
-            sb.append("<div style='display:flex; justify-content:center; align-items:center; min-height:70vh;'>");
-            sb.append("<div class='card-container' style='max-width:420px; width:100%; margin:0 auto;'>");
-            sb.append("<div style='text-align:center; margin-bottom:1.5rem;'>");
-            sb.append("<div class='brand-icon' style='margin:0 auto 0.75rem auto;'>P1</div>");
-            sb.append("<h1 style='font-size:1.6rem; color:white;'>Park<span style='color:var(--secondary-color);'>One</span></h1>");
-            sb.append("<p style='color:var(--text-muted); font-size:0.9rem;'>Iniciar Sesión en el Sistema</p></div>");
+        private void renderListaControl(HttpExchange exchange, String filtro) throws IOException {
+            List<RegistroParqueadero> lista = (filtro != null && !filtro.isEmpty()) ? parqueaderoService.buscar(filtro) : parqueaderoService.obtenerTodos();
 
-            if (errorMsg != null) {
-                sb.append("<div class='alert alert-danger' style='font-size:0.85rem; padding:0.75rem 1rem;'><span>").append(errorMsg).append("</span></div>");
+            StringBuilder sb = new StringBuilder();
+            sb.append("<div class='titulo-pagina'><h2>Control de Entradas y Salidas</h2>");
+            sb.append("<p>Módulo de registro en tiempo real y facturación de parqueadero</p></div>");
+
+            sb.append("<div class='card-container'><div class='toolbar'>");
+            sb.append("<form action='/control' method='get' class='search-bar'>");
+            sb.append("<input type='text' name='filtro' placeholder='Buscar por placa o nombre...' value='").append(filtro != null ? escapeHtml(filtro) : "").append("'>");
+            sb.append("<button type='submit' class='btn btn-primary'>Buscar</button>");
+            if (filtro != null) {
+                sb.append("<a href='/control' class='btn btn-secondary btn-sm'>Limpiar</a>");
+            }
+            sb.append("</form>");
+            sb.append("<a href='/control?accion=nuevo' class='btn btn-success'>+ Registrar Nuevo Ingreso</a></div>");
+
+            sb.append("<div class='table-responsive'><table class='data-table'><thead><tr>");
+            sb.append("<th>ID</th><th>Placa</th><th>Tipo</th><th>Propietario</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Total</th><th>Estado</th><th>Acciones</th>");
+            sb.append("</tr></thead><tbody>");
+
+            for (RegistroParqueadero r : lista) {
+                boolean activo = "ACTIVO".equalsIgnoreCase(r.getEstado());
+                sb.append("<tr>");
+                sb.append("<td>#").append(r.getIdRegistro()).append("</td>");
+                sb.append("<td><strong style='color:#60a5fa; font-size:1.1rem;'>").append(escapeHtml(r.getPlacaVehiculo())).append("</strong></td>");
+                sb.append("<td>").append(escapeHtml(r.getTipoVehiculo())).append("</td>");
+                sb.append("<td>").append(escapeHtml(r.getPropietarioNombre())).append("</td>");
+                sb.append("<td>").append(r.getFechaEntradaFormateada()).append("</td>");
+                sb.append("<td>").append(r.getFechaSalidaFormateada()).append("</td>");
+                sb.append("<td>").append(activo ? "-" : r.getHorasCobradas() + " h").append("</td>");
+                sb.append("<td><strong>$").append(String.format("%.2f", r.getTotalPagar())).append("</strong></td>");
+                sb.append("<td><span class='badge ").append(activo ? "badge-parked" : "badge-exit").append("'>").append(r.getEstado()).append("</span></td>");
+                sb.append("<td><div style='display:flex; gap:0.4rem;'>");
+                if (activo) {
+                    sb.append("<form action='/control' method='post' style='display:inline;'>");
+                    sb.append("<input type='hidden' name='accion' value='salida'>");
+                    sb.append("<input type='hidden' name='idRegistro' value='").append(r.getIdRegistro()).append("'>");
+                    sb.append("<button type='submit' class='btn btn-primary btn-sm' onclick='return confirm(\"¿Marcar salida del vehículo?\");'>Marcar Salida</button>");
+                    sb.append("</form>");
+                } else {
+                    sb.append("<a href='/control?accion=ticket&id=").append(r.getIdRegistro()).append("' class='btn btn-secondary btn-sm'>Ver Ticket</a>");
+                }
+                sb.append("</div></td></tr>");
             }
 
-            sb.append("<form action='/login' method='post'>");
-            sb.append("<div class='form-group' style='margin-bottom:1.2rem;'><label>Correo o Cédula *</label>");
-            sb.append("<input type='text' name='usuario' required placeholder='Ingrese correo o cédula'></div>");
-            sb.append("<div class='form-group' style='margin-bottom:1.5rem;'><label>Contraseña *</label>");
-            sb.append("<input type='password' name='contrasena' required placeholder='••••••••'></div>");
-            sb.append("<button type='submit' class='btn btn-success' style='width:100%; justify-content:center; padding:0.75rem;'>Ingresar al Sistema</button>");
-            sb.append("</form>");
-            sb.append("</div></div>");
+            sb.append("</tbody></table></div></div>");
 
-            sendResponse(exchange, 200, renderFullLayout("Iniciar Sesión", sb.toString()));
+            sendResponse(exchange, 200, renderFullLayout("Control Parqueadero", sb.toString()));
+        }
+
+        private void renderFormularioIngreso(HttpExchange exchange) throws IOException {
+            StringBuilder sb = new StringBuilder();
+            sb.append("<div class='titulo-pagina'><h2>Registrar Entrada de Vehículo</h2>");
+            sb.append("<p>Ingrese la información para la entrada al parqueadero</p></div>");
+
+            sb.append("<div class='card-container' style='max-width:700px; margin:0 auto;'>");
+            sb.append("<form action='/control' method='post'>");
+            sb.append("<input type='hidden' name='accion' value='ingresar'>");
+            sb.append("<div class='form-grid'>");
+            sb.append("<div class='form-group'><label>Placa del Vehículo *</label><input type='text' name='placa' required placeholder='Ej: KRF-502' style='text-transform:uppercase;'></div>");
+            sb.append("<div class='form-group'><label>Tipo de Vehículo *</label><select name='tipo'><option value='Automóvil'>Automóvil ($4,000/h)</option><option value='Motocicleta'>Motocicleta ($2,000/h)</option><option value='Camioneta'>Camioneta ($6,000/h)</option></select></div>");
+            sb.append("<div class='form-group' style='grid-column: 1 / -1;'><label>Nombre del Propietario / Conductor *</label><input type='text' name='propietario' required placeholder='Ej: Brandon Yair Galvis Diaz'></div>");
+            sb.append("<div class='form-group' style='grid-column: 1 / -1;'><label>Observaciones de Ingreso</label><input type='text' name='observaciones' placeholder='Sin rayones, bahía número 4...'></div>");
+            sb.append("</div>");
+            sb.append("<div class='form-actions'>");
+            sb.append("<a href='/control' class='btn btn-secondary'>Cancelar</a>");
+            sb.append("<button type='submit' class='btn btn-success'>Registrar Ingreso</button>");
+            sb.append("</div></form></div>");
+
+            sendResponse(exchange, 200, renderFullLayout("Nuevo Ingreso", sb.toString()));
+        }
+
+        private void renderTicketCobro(HttpExchange exchange, int idRegistro) throws IOException {
+            RegistroParqueadero r = registroRepo.buscarPorId(idRegistro);
+            if (r == null) {
+                redirect(exchange, "/control");
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("<div class='titulo-pagina'><h2>Comprobante de Pago / Ticket</h2>");
+            sb.append("<p>Detalle de liquidación de servicio de parqueadero</p></div>");
+
+            sb.append("<div class='ticket-box'>");
+            sb.append("  <div class='ticket-header'><h3>PARKONE PARQUEADEROS</h3><p>Popayán, Cauca - SENA ADSO</p></div>");
+            sb.append("  <hr style='border:0; border-top:1px dashed #4b5563; margin:1rem 0;'>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Ticket No:</span><strong>#").append(r.getIdRegistro()).append("</strong></div>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Placa:</span><strong style='font-size:1.2rem; color:#60a5fa;'>").append(escapeHtml(r.getPlacaVehiculo())).append("</strong></div>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Tipo:</span><span>").append(escapeHtml(r.getTipoVehiculo())).append("</span></div>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Cliente:</span><span>").append(escapeHtml(r.getPropietarioNombre())).append("</span></div>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Entrada:</span><span>").append(r.getFechaEntradaFormateada()).append("</span></div>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Salida:</span><span>").append(r.getFechaSalidaFormateada()).append("</span></div>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Horas Liquidadas:</span><span>").append(r.getHorasCobradas()).append(" hora(s)</span></div>");
+            sb.append("  <div style='display:flex; justify-content:space-between; margin-bottom:0.5rem;'><span>Tarifa/Hora:</span><span>$").append(String.format("%.2f", r.getTarifaAplicada())).append("</span></div>");
+            sb.append("  <hr style='border:0; border-top:1px dashed #4b5563; margin:1rem 0;'>");
+            sb.append("  <div style='display:flex; justify-content:space-between; font-size:1.4rem; font-weight:bold; color:#4ade80;'><span>TOTAL A PAGAR:</span><span>$").append(String.format("%.2f", r.getTotalPagar())).append("</span></div>");
+            sb.append("  <div style='text-align:center; margin-top:1.5rem;'><a href='/control' class='btn btn-primary'>Volver al Control</a></div>");
+            sb.append("</div>");
+
+            sendResponse(exchange, 200, renderFullLayout("Ticket de Pago", sb.toString()));
         }
     }
 
+    // Manejador Módulo Usuarios
     static class ManejadorUsuario implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -159,12 +331,11 @@ public class ServidorWeb {
                 if ("actualizar".equalsIgnoreCase(accion)) {
                     int id = Integer.parseInt(postParams.getOrDefault("idUsuario", "0"));
                     Usuario u = new Usuario(id, postParams.get("identificacion"), postParams.get("nombres"), postParams.get("apellidos"), postParams.get("cargo"), postParams.get("rol"), postParams.get("correo"), pass, postParams.get("telefono"), postParams.get("direccion"), null);
-                    usuarioDAO.actualizar(u);
+                    usuarioService.actualizar(u);
                 } else {
                     Usuario u = new Usuario(postParams.get("identificacion"), postParams.get("nombres"), postParams.get("apellidos"), postParams.get("cargo"), postParams.get("rol"), postParams.get("correo"), pass, postParams.get("telefono"), postParams.get("direccion"));
-                    usuarioDAO.insertar(u);
+                    usuarioService.registrar(u);
                 }
-
                 redirect(exchange, "/usuarios");
                 return;
             }
@@ -175,11 +346,11 @@ public class ServidorWeb {
                 renderFormularioUsuario(exchange, null);
             } else if ("editar".equalsIgnoreCase(accion)) {
                 int id = Integer.parseInt(queryParams.getOrDefault("id", "0"));
-                Usuario u = usuarioDAO.buscarPorId(id);
+                Usuario u = usuarioService.obtenerPorId(id);
                 renderFormularioUsuario(exchange, u);
             } else if ("eliminar".equalsIgnoreCase(accion)) {
                 int id = Integer.parseInt(queryParams.getOrDefault("id", "0"));
-                usuarioDAO.eliminar(id);
+                usuarioService.eliminar(id);
                 redirect(exchange, "/usuarios");
             } else {
                 renderListaUsuarios(exchange, queryParams.get("criterio"));
@@ -187,25 +358,24 @@ public class ServidorWeb {
         }
 
         private void renderListaUsuarios(HttpExchange exchange, String criterio) throws IOException {
-            List<Usuario> lista = (criterio != null && !criterio.isEmpty()) ? usuarioDAO.buscarPorCriterio(criterio) : usuarioDAO.listar();
+            List<Usuario> lista = usuarioService.buscar(criterio);
 
             StringBuilder sb = new StringBuilder();
-            sb.append("<div class='titulo-pagina'><h2>Lista de Usuarios</h2>");
-            sb.append("<p>Gestión de usuarios registrados</p></div>");
+            sb.append("<div class='titulo-pagina'><h2>Gestión de Usuarios</h2>");
+            sb.append("<p>Módulo de administración de personal y roles</p></div>");
 
             sb.append("<div class='card-container'><div class='toolbar'>");
             sb.append("<form action='/usuarios' method='get' class='search-bar'>");
-            sb.append("<input type='hidden' name='accion' value='buscar'>");
             sb.append("<input type='text' name='criterio' placeholder='Buscar por cédula o nombre...' value='").append(criterio != null ? escapeHtml(criterio) : "").append("'>");
             sb.append("<button type='submit' class='btn btn-primary'>Buscar</button>");
             if (criterio != null) {
-                sb.append("<a href='/usuarios' class='btn btn-danger btn-sm'>Limpiar</a>");
+                sb.append("<a href='/usuarios' class='btn btn-secondary btn-sm'>Limpiar</a>");
             }
             sb.append("</form>");
             sb.append("<a href='/usuarios?accion=nuevo' class='btn btn-success'>+ Registrar Usuario</a></div>");
 
             sb.append("<div class='table-responsive'><table class='data-table'><thead><tr>");
-            sb.append("<th>ID</th><th>Identificación</th><th>Nombre</th><th>Cargo</th><th>Rol</th><th>Correo</th><th>Teléfono</th><th>Acciones</th>");
+            sb.append("<th>ID</th><th>Identificación</th><th>Nombre Completo</th><th>Cargo</th><th>Rol</th><th>Correo</th><th>Teléfono</th><th>Acciones</th>");
             sb.append("</tr></thead><tbody>");
 
             for (Usuario u : lista) {
@@ -219,7 +389,7 @@ public class ServidorWeb {
                 sb.append("<td>").append(u.getTelefono() != null ? escapeHtml(u.getTelefono()) : "N/A").append("</td>");
                 sb.append("<td><div style='display:flex; gap:0.5rem;'>");
                 sb.append("<a href='/usuarios?accion=editar&id=").append(u.getIdUsuario()).append("' class='btn btn-primary btn-sm'>Editar</a>");
-                sb.append("<a href='/usuarios?accion=eliminar&id=").append(u.getIdUsuario()).append("' class='btn btn-danger btn-sm' onclick='return confirm(\"¿Eliminar usuario?\");'>Eliminar</a>");
+                sb.append("<a href='/usuarios?accion=eliminar&id=").append(u.getIdUsuario()).append("' class='btn btn-secondary btn-sm' onclick='return confirm(\"¿Eliminar usuario?\");'>Eliminar</a>");
                 sb.append("</div></td></tr>");
             }
 
@@ -232,10 +402,10 @@ public class ServidorWeb {
             boolean esEdit = (u != null);
             StringBuilder sb = new StringBuilder();
 
-            sb.append("<div class='titulo-pagina'><h2>").append(esEdit ? "Modificar Usuario" : "Nuevo Usuario").append("</h2>");
-            sb.append("<p>Complete la información del usuario</p></div>");
+            sb.append("<div class='titulo-pagina'><h2>").append(esEdit ? "Editar Usuario" : "Registrar Nuevo Usuario").append("</h2>");
+            sb.append("<p>Complete los datos requeridos</p></div>");
 
-            sb.append("<div class='card-container' style='max-width:850px; margin:0 auto;'>");
+            sb.append("<div class='card-container' style='max-width:800px; margin:0 auto;'>");
             sb.append("<form action='/usuarios' method='post'>");
             sb.append("<input type='hidden' name='accion' value='").append(esEdit ? "actualizar" : "guardar").append("'>");
             if (esEdit) {
@@ -252,20 +422,20 @@ public class ServidorWeb {
             sb.append("<option value='Administrador' ").append(esEdit && "Administrador".equals(u.getRol()) ? "selected" : "").append(">Administrador</option>");
             sb.append("</select></div>");
             sb.append("<div class='form-group'><label>Correo *</label><input type='email' name='correo' required value='").append(esEdit ? escapeHtml(u.getCorreo()) : "").append("'></div>");
-            sb.append("<div class='form-group'><label>Contraseña *</label><input type='password' name='contrasena' required value='").append(esEdit && u.getContrasena() != null ? escapeHtml(u.getContrasena()) : "").append("'></div>");
+            sb.append("<div class='form-group'><label>Contraseña *</label><input type='password' name='contrasena' required value='").append(esEdit && u.getContrasena() != null ? escapeHtml(u.getContrasena()) : "123456").append("'></div>");
             sb.append("<div class='form-group'><label>Teléfono</label><input type='text' name='telefono' value='").append(esEdit && u.getTelefono() != null ? escapeHtml(u.getTelefono()) : "").append("'></div>");
-            sb.append("<div class='form-group'><label>Dirección</label><input type='text' name='direccion' value='").append(esEdit && u.getDireccion() != null ? escapeHtml(u.getDireccion()) : "").append("'></div>");
             sb.append("</div>");
 
             sb.append("<div class='form-actions'>");
-            sb.append("<a href='/usuarios' class='btn btn-danger'>Cancelar</a>");
-            sb.append("<button type='submit' class='btn btn-success'>").append(esEdit ? "Guardar Cambios" : "Registrar Usuario").append("</button>");
+            sb.append("<a href='/usuarios' class='btn btn-secondary'>Cancelar</a>");
+            sb.append("<button type='submit' class='btn btn-success'>").append(esEdit ? "Guardar Cambios" : "Registrar").append("</button>");
             sb.append("</div></form></div>");
 
             sendResponse(exchange, 200, renderFullLayout("Formulario Usuario", sb.toString()));
         }
     }
 
+    // Manejador Módulo Vehículos
     static class ManejadorVehiculo implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -282,7 +452,7 @@ public class ServidorWeb {
                 Map<String, String> postParams = parseQueryParams(body);
                 double tarifa = Double.parseDouble(postParams.getOrDefault("tarifaPorHora", "4000"));
                 Vehiculo v = new Vehiculo(postParams.get("placa"), postParams.get("tipo"), postParams.get("marca"), postParams.get("color"), postParams.get("propietarioCedula"), postParams.get("propietarioNombre"), "Estacionado", tarifa);
-                vehiculoDAO.insertar(v);
+                vehiculoService.guardar(v);
                 redirect(exchange, "/vehiculos");
                 return;
             }
@@ -290,14 +460,9 @@ public class ServidorWeb {
             String accion = queryParams.getOrDefault("accion", "listar");
             if ("nuevo".equalsIgnoreCase(accion)) {
                 renderFormularioVehiculo(exchange);
-            } else if ("cambiarEstado".equalsIgnoreCase(accion)) {
-                int id = Integer.parseInt(queryParams.getOrDefault("id", "0"));
-                String estado = queryParams.getOrDefault("estado", "Retirado");
-                vehiculoDAO.cambiarEstado(id, estado);
-                redirect(exchange, "/vehiculos");
             } else if ("eliminar".equalsIgnoreCase(accion)) {
                 int id = Integer.parseInt(queryParams.getOrDefault("id", "0"));
-                vehiculoDAO.eliminar(id);
+                vehiculoService.eliminar(id);
                 redirect(exchange, "/vehiculos");
             } else {
                 renderListaVehiculos(exchange, queryParams.get("filtro"));
@@ -305,19 +470,18 @@ public class ServidorWeb {
         }
 
         private void renderListaVehiculos(HttpExchange exchange, String filtro) throws IOException {
-            List<Vehiculo> lista = (filtro != null && !filtro.isEmpty()) ? vehiculoDAO.buscarPorPlacaOCedula(filtro) : vehiculoDAO.listar();
+            List<Vehiculo> lista = vehiculoService.buscar(filtro);
 
             StringBuilder sb = new StringBuilder();
-            sb.append("<div class='titulo-pagina'><h2>Lista de Vehículos</h2>");
-            sb.append("<p>Gestión de vehículos ingresados</p></div>");
+            sb.append("<div class='titulo-pagina'><h2>Gestión de Vehículos</h2>");
+            sb.append("<p>Módulo de vehículos y tarifas por categoría</p></div>");
 
             sb.append("<div class='card-container'><div class='toolbar'>");
             sb.append("<form action='/vehiculos' method='get' class='search-bar'>");
-            sb.append("<input type='hidden' name='accion' value='buscar'>");
-            sb.append("<input type='text' name='filtro' placeholder='Buscar por placa o cédula...' value='").append(filtro != null ? escapeHtml(filtro) : "").append("'>");
+            sb.append("<input type='text' name='filtro' placeholder='Buscar por placa o céduala...' value='").append(filtro != null ? escapeHtml(filtro) : "").append("'>");
             sb.append("<button type='submit' class='btn btn-primary'>Buscar</button>");
             if (filtro != null) {
-                sb.append("<a href='/vehiculos' class='btn btn-danger btn-sm'>Limpiar</a>");
+                sb.append("<a href='/vehiculos' class='btn btn-secondary btn-sm'>Limpiar</a>");
             }
             sb.append("</form>");
             sb.append("<a href='/vehiculos?accion=nuevo' class='btn btn-success'>+ Registrar Vehículo</a></div>");
@@ -337,12 +501,7 @@ public class ServidorWeb {
                 sb.append("<td><span class='badge ").append(estacionado ? "badge-parked" : "badge-exit").append("'>").append(escapeHtml(v.getEstado())).append("</span></td>");
                 sb.append("<td>$").append(String.format("%.2f", v.getTarifaPorHora())).append("</td>");
                 sb.append("<td><div style='display:flex; gap:0.4rem;'>");
-                if (estacionado) {
-                    sb.append("<a href='/vehiculos?accion=cambiarEstado&id=").append(v.getIdVehiculo()).append("&estado=Retirado' class='btn btn-primary btn-sm'>Marcar Salida</a>");
-                } else {
-                    sb.append("<a href='/vehiculos?accion=cambiarEstado&id=").append(v.getIdVehiculo()).append("&estado=Estacionado' class='btn btn-success btn-sm'>Re-ingresar</a>");
-                }
-                sb.append("<a href='/vehiculos?accion=eliminar&id=").append(v.getIdVehiculo()).append("' class='btn btn-danger btn-sm' onclick='return confirm(\"¿Eliminar vehículo?\");'>Eliminar</a>");
+                sb.append("<a href='/vehiculos?accion=eliminar&id=").append(v.getIdVehiculo()).append("' class='btn btn-secondary btn-sm' onclick='return confirm(\"¿Eliminar registro?\");'>Eliminar</a>");
                 sb.append("</div></td></tr>");
             }
 
@@ -353,30 +512,114 @@ public class ServidorWeb {
 
         private void renderFormularioVehiculo(HttpExchange exchange) throws IOException {
             StringBuilder sb = new StringBuilder();
-            sb.append("<div class='titulo-pagina'><h2>Ingreso de Vehículo</h2>");
-            sb.append("<p>Complete la información del vehículo</p></div>");
+            sb.append("<div class='titulo-pagina'><h2>Registrar Vehículo</h2>");
+            sb.append("<p>Información del vehículo y propietario</p></div>");
 
-            sb.append("<div class='card-container' style='max-width:850px; margin:0 auto;'>");
+            sb.append("<div class='card-container' style='max-width:800px; margin:0 auto;'>");
             sb.append("<form action='/vehiculos' method='post'>");
-            sb.append("<input type='hidden' name='accion' value='guardar'>");
             sb.append("<div class='form-grid'>");
-            sb.append("<div class='form-group'><label>Placa *</label><input type='text' name='placa' required placeholder='ABC-123' style='text-transform:uppercase;'></div>");
+            sb.append("<div class='form-group'><label>Placa *</label><input type='text' name='placa' required placeholder='Ej: KRF-502' style='text-transform:uppercase;'></div>");
             sb.append("<div class='form-group'><label>Tipo *</label><select name='tipo'><option value='Automóvil'>Automóvil</option><option value='Motocicleta'>Motocicleta</option><option value='Camioneta'>Camioneta</option></select></div>");
             sb.append("<div class='form-group'><label>Marca</label><input type='text' name='marca' placeholder='Toyota'></div>");
-            sb.append("<div class='form-group'><label>Color</label><input type='text' name='color' placeholder='Gris'></div>");
+            sb.append("<div class='form-group'><label>Color</label><input type='text' name='color' placeholder='Negro'></div>");
             sb.append("<div class='form-group'><label>Cédula del Propietario *</label><input type='text' name='propietarioCedula' required placeholder='1061723849'></div>");
             sb.append("<div class='form-group'><label>Nombre del Propietario *</label><input type='text' name='propietarioNombre' required placeholder='Brandon Yair Galvis Diaz'></div>");
             sb.append("<div class='form-group'><label>Tarifa por Hora ($) *</label><input type='number' name='tarifaPorHora' value='4000' required></div>");
             sb.append("</div>");
             sb.append("<div class='form-actions'>");
-            sb.append("<a href='/vehiculos' class='btn btn-danger'>Cancelar</a>");
-            sb.append("<button type='submit' class='btn btn-success'>Registrar Entrada</button>");
+            sb.append("<a href='/vehiculos' class='btn btn-secondary'>Cancelar</a>");
+            sb.append("<button type='submit' class='btn btn-success'>Guardar Vehículo</button>");
             sb.append("</div></form></div>");
 
-            sendResponse(exchange, 200, renderFullLayout("Formulario Vehículo", sb.toString()));
+            sendResponse(exchange, 200, renderFullLayout("Nuevo Vehículo", sb.toString()));
         }
     }
 
+    // Manejador del Inicio de Sesión
+    static class ManejadorLogin implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String method = exchange.getRequestMethod();
+            Map<String, String> queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
+
+            if ("logout".equalsIgnoreCase(queryParams.get("accion"))) {
+                usuarioSesionActiva = null;
+                redirect(exchange, "/login");
+                return;
+            }
+
+            if ("POST".equalsIgnoreCase(method)) {
+                String body = readRequestBody(exchange);
+                Map<String, String> postParams = parseQueryParams(body);
+                String user = postParams.get("usuario");
+                String pass = postParams.get("contrasena");
+
+                Usuario u = usuarioService.login(user, pass);
+                if (u != null) {
+                    usuarioSesionActiva = u;
+                    redirect(exchange, "/");
+                    return;
+                } else {
+                    renderFormularioLogin(exchange, "Credenciales incorrectas.");
+                    return;
+                }
+            }
+
+            renderFormularioLogin(exchange, null);
+        }
+
+        private void renderFormularioLogin(HttpExchange exchange, String errorMsg) throws IOException {
+            StringBuilder sb = new StringBuilder();
+            sb.append("<div style='display:flex; justify-content:center; align-items:center; min-height:65vh;'>");
+            sb.append("<div class='card-container' style='max-width:400px; width:100%;'>");
+            sb.append("<div style='text-align:center; margin-bottom:1.5rem;'>");
+            sb.append("<div class='brand-icon' style='margin:0 auto 0.75rem auto;'>P1</div>");
+            sb.append("<h1 style='font-size:1.6rem; color:white;'>Park<span style='color:#39a900;'>One</span></h1>");
+            sb.append("<p style='color:#9ca3af; font-size:0.9rem;'>Iniciar Sesión en el Sistema</p></div>");
+
+            if (errorMsg != null) {
+                sb.append("<div class='alert alert-danger'><span>").append(errorMsg).append("</span></div>");
+            }
+
+            sb.append("<form action='/login' method='post'>");
+            sb.append("<div class='form-group' style='margin-bottom:1.2rem;'><label>Correo o Cédula *</label>");
+            sb.append("<input type='text' name='usuario' required placeholder='1061723849'></div>");
+            sb.append("<div class='form-group' style='margin-bottom:1.5rem;'><label>Contraseña *</label>");
+            sb.append("<input type='password' name='contrasena' required value='123456'></div>");
+            sb.append("<button type='submit' class='btn btn-success' style='width:100%; justify-content:center; padding:0.75rem;'>Ingresar</button>");
+            sb.append("</form>");
+            sb.append("</div></div>");
+
+            sendResponse(exchange, 200, renderFullLayout("Iniciar Sesión", sb.toString()));
+        }
+    }
+
+    // Handlers API REST JSON (Para App Móvil)
+    static class ManejadorApiDashboard implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            Map<String, Object> stats = parqueaderoService.obtenerEstadisticas();
+            sendJsonResponse(exchange, 200, toJson(stats));
+        }
+    }
+
+    static class ManejadorApiVehiculos implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            List<Vehiculo> lista = vehiculoService.obtenerTodos();
+            sendJsonResponse(exchange, 200, toJsonListVehiculos(lista));
+        }
+    }
+
+    static class ManejadorApiRegistros implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            List<RegistroParqueadero> lista = parqueaderoService.obtenerActivos();
+            sendJsonResponse(exchange, 200, toJsonListRegistros(lista));
+        }
+    }
+
+    // Sirve archivos estaticos como CSS
     static class ManejadorArchivos implements HttpHandler {
         private final String path;
         private final String contentType;
@@ -397,42 +640,51 @@ public class ServidorWeb {
                     os.write(bytes);
                 }
             } else {
-                sendResponse(exchange, 404, "404 Página no encontrada");
+                sendResponse(exchange, 404, "Página no encontrada");
             }
         }
     }
 
+    // Metodo helper para renderizar el layout completo HTML
     private static String renderFullLayout(String activeTab, String content) {
         String infoUser = (usuarioSesionActiva != null)
-                ? "<div><strong>Usuario:</strong> " + usuarioSesionActiva.getNombreCompleto() + " (" + usuarioSesionActiva.getRol() + ")</div><div><a href='/login?accion=logout' style='color:#f87171;'>Cerrar Sesión</a></div>"
+                ? "<div><strong>Usuario:</strong> " + usuarioSesionActiva.getNombreCompleto() + " (" + usuarioSesionActiva.getRol() + ")</div><div><a href='/login?accion=logout' style='color:#ef4444;'>Cerrar Sesión</a></div>"
                 : "<div><a href='/login' style='color:#4ade80;'>Iniciar Sesión</a></div>";
 
         boolean esAdmin = (usuarioSesionActiva != null && "Administrador".equalsIgnoreCase(usuarioSesionActiva.getRol()));
 
         String navMenu = (usuarioSesionActiva != null)
                 ? "<nav id='menu-h'><ul>" +
-                  "<li><a href='/' class='" + ("Inicio".equals(activeTab) ? "active" : "") + "'>Inicio</a></li>" +
-                  (esAdmin ? "<li><a href='/usuarios' class='" + ("Usuarios".equals(activeTab) ? "active" : "") + "'>Módulo Usuarios</a></li>" +
-                             "<li><a href='/usuarios?accion=nuevo'>+ Nuevo Usuario</a></li>" : "") +
-                  "<li><a href='/vehiculos' class='" + ("Vehículos".equals(activeTab) ? "active" : "") + "'>Módulo Vehículos</a></li>" +
-                  "<li><a href='/vehiculos?accion=nuevo'>+ Nuevo Vehículo</a></li>" +
+                  "<li><a href='/' class='" + ("Inicio".equals(activeTab) ? "active" : "") + "'>Panel Principal</a></li>" +
+                  "<li><a href='/control' class='" + ("Control Parqueadero".equals(activeTab) || "Nuevo Ingreso".equals(activeTab) ? "active" : "") + "'>Control Parqueadero</a></li>" +
+                  "<li><a href='/vehiculos' class='" + ("Vehículos".equals(activeTab) ? "active" : "") + "'>Gestión Vehículos</a></li>" +
+                  (esAdmin ? "<li><a href='/usuarios' class='" + ("Usuarios".equals(activeTab) ? "active" : "") + "'>Gestión Usuarios</a></li>" : "") +
                   "</ul></nav>"
                 : "";
 
         return "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
-                "<title>ParkOne | " + activeTab + "</title><link rel='stylesheet' href='/css/style.css'></head><body>" +
-                "<header><div class='brand'><div class='brand-icon'>P1</div><div><h1>Park<span>One</span></h1><small style='color:#9ca3af; font-size:0.75rem;'>Gestión de Parqueaderos</small></div></div>" +
+                "<title>ParkOne Framework | " + activeTab + "</title><link rel='stylesheet' href='/css/style.css'></head><body>" +
+                "<header><div class='brand'><div class='brand-icon'>P1</div><div><h1>Park<span>One</span></h1><small style='color:#9ca3af;'>Framework Web & Móvil</small></div></div>" +
                 "<div class='sub-header-info'>" + infoUser + "</div></header>" +
                 navMenu +
                 "<main class='contenedor-principal'>" + content + "</main>" +
                 "<footer><div>Popayán - Cauca</div>" +
                 "<div>SENA - Tecnólogo ADSO</div>" +
-                "<div style='margin-top:0.25rem;'>Evidencia GA7-220501096-AA2-EV02 &copy; 2026</div></footer></body></html>";
+                "<div style='margin-top:0.25rem;'>Evidencia GA7-220501096-AA3-EV01 &copy; 2026</div></footer></body></html>";
     }
 
     private static void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
         byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
+        exchange.sendResponseHeaders(status, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+    }
+
+    private static void sendJsonResponse(HttpExchange exchange, int status, String json) throws IOException {
+        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(status, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
@@ -474,5 +726,52 @@ public class ServidorWeb {
     private static String escapeHtml(String input) {
         if (input == null) return "";
         return input.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
+    // Serializadores simples de JSON para respuestas de la API REST sin librerias externas pesadas
+    private static String toJson(Map<String, Object> map) {
+        StringBuilder sb = new StringBuilder("{");
+        int i = 0;
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (i > 0) sb.append(",");
+            sb.append("\"").append(entry.getKey()).append("\":").append(entry.getValue());
+            i++;
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+
+    private static String toJsonListVehiculos(List<Vehiculo> lista) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < lista.size(); i++) {
+            Vehiculo v = lista.get(i);
+            if (i > 0) sb.append(",");
+            sb.append("{")
+              .append("\"id\":").append(v.getIdVehiculo()).append(",")
+              .append("\"placa\":\"").append(v.getPlaca()).append("\",")
+              .append("\"tipo\":\"").append(v.getTipo()).append("\",")
+              .append("\"propietario\":\"").append(v.getPropietarioNombre()).append("\",")
+              .append("\"estado\":\"").append(v.getEstado()).append("\"")
+              .append("}");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private static String toJsonListRegistros(List<RegistroParqueadero> lista) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < lista.size(); i++) {
+            RegistroParqueadero r = lista.get(i);
+            if (i > 0) sb.append(",");
+            sb.append("{")
+              .append("\"id\":").append(r.getIdRegistro()).append(",")
+              .append("\"placa\":\"").append(r.getPlacaVehiculo()).append("\",")
+              .append("\"tipo\":\"").append(r.getTipoVehiculo()).append("\",")
+              .append("\"fechaEntrada\":\"").append(r.getFechaEntradaFormateada()).append("\",")
+              .append("\"estado\":\"").append(r.getEstado()).append("\"")
+              .append("}");
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }

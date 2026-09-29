@@ -1,11 +1,9 @@
-package co.edu.sena.parkone.modelo;
+package co.edu.sena.parkone.model;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
-// Clase para guardar los datos del usuario
-public class Usuario implements Serializable {
-    private static final long serialVersionUID = 1L;
+// Clase modelo para guardar los datos del usuario del sistema
+public class Usuario {
 
     private int idUsuario;
     private String identificacion;
@@ -17,23 +15,13 @@ public class Usuario implements Serializable {
     private String contrasena;
     private String telefono;
     private String direccion;
-    private Timestamp fechaRegistro;
+    private LocalDateTime fechaRegistro;
 
+    // Constructor vacio
     public Usuario() {
     }
 
-    public Usuario(String identificacion, String nombres, String apellidos, String cargo, String rol, String correo, String telefono, String direccion) {
-        this.identificacion = identificacion;
-        this.nombres = nombres;
-        this.apellidos = apellidos;
-        this.cargo = cargo;
-        this.rol = rol;
-        this.correo = correo;
-        this.contrasena = "123456";
-        this.telefono = telefono;
-        this.direccion = direccion;
-    }
-
+    // Constructor sin id para crear nuevos usuarios
     public Usuario(String identificacion, String nombres, String apellidos, String cargo, String rol, String correo, String contrasena, String telefono, String direccion) {
         this.identificacion = identificacion;
         this.nombres = nombres;
@@ -44,23 +32,11 @@ public class Usuario implements Serializable {
         this.contrasena = contrasena;
         this.telefono = telefono;
         this.direccion = direccion;
+        this.fechaRegistro = LocalDateTime.now();
     }
 
-    public Usuario(int idUsuario, String identificacion, String nombres, String apellidos, String cargo, String rol, String correo, String telefono, String direccion, Timestamp fechaRegistro) {
-        this.idUsuario = idUsuario;
-        this.identificacion = identificacion;
-        this.nombres = nombres;
-        this.apellidos = apellidos;
-        this.cargo = cargo;
-        this.rol = rol;
-        this.correo = correo;
-        this.contrasena = "123456";
-        this.telefono = telefono;
-        this.direccion = direccion;
-        this.fechaRegistro = fechaRegistro;
-    }
-
-    public Usuario(int idUsuario, String identificacion, String nombres, String apellidos, String cargo, String rol, String correo, String contrasena, String telefono, String direccion, Timestamp fechaRegistro) {
+    // Constructor completo
+    public Usuario(int idUsuario, String identificacion, String nombres, String apellidos, String cargo, String rol, String correo, String contrasena, String telefono, String direccion, LocalDateTime fechaRegistro) {
         this.idUsuario = idUsuario;
         this.identificacion = identificacion;
         this.nombres = nombres;
@@ -72,6 +48,11 @@ public class Usuario implements Serializable {
         this.telefono = telefono;
         this.direccion = direccion;
         this.fechaRegistro = fechaRegistro;
+    }
+
+    // Devuelve el nombre completo del usuario
+    public String getNombreCompleto() {
+        return nombres + " " + apellidos;
     }
 
     // Getters y Setters
@@ -155,15 +136,11 @@ public class Usuario implements Serializable {
         this.direccion = direccion;
     }
 
-    public Timestamp getFechaRegistro() {
+    public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }
 
-    public void setFechaRegistro(Timestamp fechaRegistro) {
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
-    }
-
-    public String getNombreCompleto() {
-        return (nombres != null ? nombres : "") + " " + (apellidos != null ? apellidos : "");
     }
 }

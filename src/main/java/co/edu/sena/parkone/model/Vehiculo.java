@@ -1,11 +1,9 @@
-package co.edu.sena.parkone.modelo;
+package co.edu.sena.parkone.model;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
-// Clase para los datos de los vehiculos
-public class Vehiculo implements Serializable {
-    private static final long serialVersionUID = 1L;
+// Clase modelo para los vehiculos registrados en el parqueadero
+public class Vehiculo {
 
     private int idVehiculo;
     private String placa;
@@ -16,12 +14,13 @@ public class Vehiculo implements Serializable {
     private String propietarioNombre;
     private String estado;
     private double tarifaPorHora;
-    private Timestamp fechaIngreso;
-    private Timestamp fechaSalida;
+    private LocalDateTime fechaRegistro;
 
+    // Constructor vacio
     public Vehiculo() {
     }
 
+    // Constructor para registrar un vehiculo nuevo
     public Vehiculo(String placa, String tipo, String marca, String color, String propietarioCedula, String propietarioNombre, String estado, double tarifaPorHora) {
         this.placa = placa;
         this.tipo = tipo;
@@ -31,9 +30,11 @@ public class Vehiculo implements Serializable {
         this.propietarioNombre = propietarioNombre;
         this.estado = estado;
         this.tarifaPorHora = tarifaPorHora;
+        this.fechaRegistro = LocalDateTime.now();
     }
 
-    public Vehiculo(int idVehiculo, String placa, String tipo, String marca, String color, String propietarioCedula, String propietarioNombre, String estado, double tarifaPorHora, Timestamp fechaIngreso, Timestamp fechaSalida) {
+    // Constructor completo con id y fecha
+    public Vehiculo(int idVehiculo, String placa, String tipo, String marca, String color, String propietarioCedula, String propietarioNombre, String estado, double tarifaPorHora, LocalDateTime fechaRegistro) {
         this.idVehiculo = idVehiculo;
         this.placa = placa;
         this.tipo = tipo;
@@ -43,8 +44,7 @@ public class Vehiculo implements Serializable {
         this.propietarioNombre = propietarioNombre;
         this.estado = estado;
         this.tarifaPorHora = tarifaPorHora;
-        this.fechaIngreso = fechaIngreso;
-        this.fechaSalida = fechaSalida;
+        this.fechaRegistro = fechaRegistro;
     }
 
     // Getters y Setters
@@ -120,19 +120,11 @@ public class Vehiculo implements Serializable {
         this.tarifaPorHora = tarifaPorHora;
     }
 
-    public Timestamp getFechaIngreso() {
-        return fechaIngreso;
+    public LocalDateTime getFechaRegistro() {
+        return fechaRegistro;
     }
 
-    public void setFechaIngreso(Timestamp fechaIngreso) {
-        this.fechaIngreso = fechaIngreso;
-    }
-
-    public Timestamp getFechaSalida() {
-        return fechaSalida;
-    }
-
-    public void setFechaSalida(Timestamp fechaSalida) {
-        this.fechaSalida = fechaSalida;
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
     }
 }

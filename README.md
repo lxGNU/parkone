@@ -1,6 +1,6 @@
-# Proyecto ParkOne - Modulos de Software (Servlets y JSP)
+# Proyecto ParkOne - Modulos Web y Movil
 
-**Evidencia:** GA7-220501096-AA2-EV02  
+**Evidencia:** GA7-220501096-AA3-EV01  
 **Programa:** Tecnologo en Analisis y Desarrollo de Software (ADSO)  
 **Ficha:** 3336118  
 **Aprendiz:** Brandon Yair Galvis Diaz  
@@ -8,26 +8,25 @@
 
 ---
 
-## 1. Descripcion del Proyecto
+## Descripcion
 
-En esta evidencia programe los modulos del sistema **ParkOne** utilizando **Java Servlets**, paginas **JSP**, **HTML** y conexion a **MySQL** por JDBC.
+En esta evidencia programe los modulos del sistema ParkOne para la gestion del parqueadero. Se usaron clases Java para los modelos, servicios y controladores web, asi como rutas de API REST en formato JSON para que se puedan consumir desde una aplicacion movil.
 
-Se implementaron:
-- Formularios HTML conectados con Servlets.
-- Uso de metodos GET y POST.
-- Paginas JSP con expresiones y partes reutilizables (header, menu, footer).
-- Modulo de usuarios y modulo de vehiculos.
+Modulos creados:
+- Control de entradas y salidas de vehiculos (calculo de horas y cobro).
+- Registro de vehiculos y propietarios.
+- Gestion de usuarios y roles.
+- API REST para conectar con la app movil.
 
 ---
 
-## 2. Estructura de Carpetas
+## Estructura de Carpetas
 
 ```text
-BrandonYairGalvisDiaz_AA2_EV02/
+ParkOne/
 ├── ENLACE_REPOSITORIO.txt
 ├── README.md
 ├── pom.xml
-├── .gitignore
 ├── compile.sh / compile.bat
 ├── run.sh / run.bat
 ├── sql/
@@ -35,51 +34,34 @@ BrandonYairGalvisDiaz_AA2_EV02/
 └── src/
     └── main/
         ├── java/co/edu/sena/parkone/
-        │   ├── conexion/
-        │   │   └── ConexionBD.java
-        │   ├── modelo/
-        │   │   ├── Usuario.java
-        │   │   └── Vehiculo.java
-        │   ├── dao/
-        │   │   ├── UsuarioDAO.java
-        │   │   └── VehiculoDAO.java
-        │   ├── servlet/
-        │   │   ├── UsuarioServlet.java
-        │   │   └── VehiculoServlet.java
+        │   ├── ParkOneApplication.java
+        │   ├── model/
+        │   ├── repository/
+        │   ├── service/
+        │   ├── controller/
         │   └── server/
-        │       └── ServidorWeb.java
-        └── webapp/
-            ├── index.jsp
-            ├── usuarios.jsp
-            ├── formulario-usuario.jsp
-            ├── vehiculos.jsp
-            ├── formulario-vehiculo.jsp
-            ├── includes/
-            │   ├── header.jsp
-            │   ├── menu.jsp
-            │   └── footer.jsp
-            ├── css/
-            │   └── style.css
-            └── WEB-INF/
-                └── web.xml
+        └── resources/
+            └── static/css/
+                └── style.css
 ```
 
 ---
 
-## 3. Como Ejecutar
+## Como Ejecutar
 
 En Linux / Mac:
 ```bash
 ./compile.sh
 ./run.sh
 ```
-Abrir el navegador en `http://localhost:8080/`.
 
 En Windows:
 - Doble clic en `compile.bat`
 - Doble clic en `run.bat`
 
+Abrir el navegador en `http://localhost:8080/`
+
 ---
 
-## 4. Base de Datos
-El script con las tablas esta en `sql/parkone_db.sql`.
+## Base de Datos
+El script SQL para MySQL esta en `sql/parkone_db.sql`.

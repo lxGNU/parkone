@@ -1,5 +1,5 @@
 ==================================================================
-ENLACE DEL REPOSITORIO - EVIDENCIA GA7-220501096-AA2-EV02
+ENLACE DEL REPOSITORIO - EVIDENCIA GA7-220501096-AA3-EV01
 ==================================================================
 
 Programa: Tecnologo en Analisis y Desarrollo de Software (ADSO)
@@ -7,32 +7,41 @@ Ficha: 3336118
 Aprendiz: Brandon Yair Galvis Diaz
 Centro: SENA Regional Cauca
 
+Evidencia: Codificación de módulos del software stand-alone, web y móvil (GA7-220501096-AA3-EV01)
+
 Enlace del Repositorio en GitHub:
 https://github.com/lxGNU/parkone
 
 Rama (Branch) de esta evidencia:
 https://github.com/lxGNU/parkone/tree/master
 
-Instrucciones para ejecutar:
+Instrucciones para compilar y ejecutar el proyecto:
 
-1. Clonar el repositorio rama master:
-   git clone -b master https://github.com/lxGNU/parkone.git
+1. Clonar el repositorio:
+   git clone https://github.com/lxGNU/parkone.git
+   cd parkone
 
 2. En Linux / Mac:
-   ./compile.sh
-   ./run.sh
+   dar permisos: chmod +x compile.sh run.sh
+   compilar:    ./compile.sh
+   ejecutar:    ./run.sh
 
 3. En Windows:
    Ejecutar compile.bat
    Ejecutar run.bat
 
-4. Abrir en el navegador:
+4. Abrir en el navegador (Web y Móvil responsive):
    http://localhost:8080/
 
-5. Script de Base de Datos MySQL:
+5. Endpoints API REST para consumo de aplicaciones móviles:
+   http://localhost:8080/api/vehiculos
+   http://localhost:8080/api/registros
+   http://localhost:8080/api/dashboard
+
+6. Archivo SQL de Base de Datos MySQL:
    sql/parkone_db.sql
 
-Credenciales de prueba del sistema:
+Credenciales de prueba para ingresar al sistema:
    Cedula: 1061723849
    Clave:  123456
 ==================================================================

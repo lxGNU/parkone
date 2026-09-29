@@ -1,0 +1,332 @@
+/* Estilos globales para la aplicacion ParkOne */
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --primary-color: #3b82f6;
+    --secondary-color: #39a900; /* Verde SENA */
+    --accent-color: #f59e0b;
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --danger-color: #ef4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-color);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background-color: #0b1329;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.brand-icon {
+    background: linear-gradient(135deg, #39a900, #059669);
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.brand h1 span {
+    color: var(--secondary-color);
+}
+
+.sub-header-info {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+/* Menu de navegacion */
+#menu-h {
+    background-color: #1e293b;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#menu-h ul {
+    list-style: none;
+    display: flex;
+    padding: 0 2rem;
+    gap: 1.5rem;
+    overflow-x: auto;
+}
+
+#menu-h a {
+    display: block;
+    padding: 0.85rem 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+#menu-h a:hover, #menu-h a.active {
+    color: white;
+    border-bottom-color: var(--secondary-color);
+}
+
+.contenedor-principal {
+    max-width: 1200px;
+    width: 100%;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    flex: 1;
+}
+
+.titulo-pagina {
+    margin-bottom: 1.5rem;
+}
+
+.titulo-pagina h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.titulo-pagina p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Tablero de tarjetas */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border-left: 5px solid var(--primary-color);
+}
+
+.stat-card.blue { border-left-color: #3b82f6; }
+.stat-card.yellow { border-left-color: #f59e0b; }
+.stat-card.green { border-left-color: #39a900; }
+.stat-card.purple { border-left-color: #8b5cf6; }
+
+.stat-title {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: white;
+}
+
+.stat-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* Contenedores y Tablas */
+.card-container {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+    max-width: 450px;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    background-color: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: white;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.data-table th, .data-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.data-table th {
+    background-color: #0f172a;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.data-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Botones */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.btn-primary { background-color: #2563eb; color: white; }
+.btn-primary:hover { background-color: #1d4ed8; }
+
+.btn-success { background-color: #39a900; color: white; }
+.btn-success:hover { background-color: #2e8800; }
+
+.btn-secondary { background-color: #475569; color: white; }
+.btn-secondary:hover { background-color: #334155; }
+
+.btn-outline { background-color: transparent; border: 1px solid var(--border-color); color: #94a3b8; }
+.btn-outline:hover { background-color: var(--border-color); color: white; }
+
+.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.82rem; }
+
+/* Badges de estado */
+.badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.badge-parked { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.badge-exit { background-color: rgba(16, 185, 129, 0.15); color: #34d399; }
+.badge-admin { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.badge-user { background-color: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+
+/* Formularios */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.form-group input, .form-group select {
+    padding: 0.65rem 1rem;
+    background-color: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: white;
+    font-size: 0.95rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Ticket de pago */
+.ticket-box {
+    background-color: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 450px;
+    margin: 1.5rem auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.ticket-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.ticket-header h3 {
+    color: var(--secondary-color);
+    font-size: 1.4rem;
+}
+
+footer {
+    background-color: #0b1329;
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: auto;
+}

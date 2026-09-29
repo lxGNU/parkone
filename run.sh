@@ -1,7 +1,10 @@
 #!/bin/bash
-# Script para iniciar el servidor
+# Script para iniciar la aplicacion ParkOne Framework
 if [ ! -d "bin" ]; then
     ./compile.sh
 fi
-echo "Abrir navegador en http://localhost:8080/"
-java -cp "bin:lib/*" co.edu.sena.parkone.server.ServidorWeb
+echo "================================================="
+echo " Iniciando ParkOne Framework..."
+echo " Abrir en navegador: http://localhost:8080/"
+echo "================================================="
+java -cp "bin:lib/*" co.edu.sena.parkone.ParkOneApplication

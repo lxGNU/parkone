@@ -1,10 +1,12 @@
 @echo off
-rem Script para compilar el proyecto
+rem Script para compilar los modulos java en Windows
 if not exist bin mkdir bin
-javac -encoding UTF-8 -d bin -cp "lib/*" src\main\java\co\edu\sena\parkone\modelo\*.java src\main\java\co\edu\sena\parkone\conexion\*.java src\main\java\co\edu\sena\parkone\dao\*.java src\main\java\co\edu\sena\parkone\servlet\*.java src\main\java\co\edu\sena\parkone\server\*.java
-if %errorlevel% equ 0 (
-    echo Compilacion lista.
-) else (
-    echo Error al compilar.
-    pause
+for /f "tokens=*" %%i in ('dir /s /b src\main\java\*.java') do (
+    javac -d bin -cp "lib/*" "%%i"
 )
+if %ERRORLEVEL% EQU 0 (
+    echo Compilacion exitosa.
+) else (
+    echo Error en la compilacion.
+)
+pause
