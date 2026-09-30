@@ -22,6 +22,8 @@ Modulos creados:
 
 ## Estructura de Carpetas
 
+Nota: usando el comando **tree** en Gnu/Linux (mx linux 25)
+
 ```text
 ParkOne/
 ├── ENLACE_REPOSITORIO.txt
