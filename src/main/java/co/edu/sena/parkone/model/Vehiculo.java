@@ -2,7 +2,7 @@ package co.edu.sena.parkone.model;
 
 import java.time.LocalDateTime;
 
-// Clase modelo para los vehiculos registrados en el parqueadero
+// Modelo de vehiculo
 public class Vehiculo {
 
     private int idVehiculo;
@@ -16,11 +16,9 @@ public class Vehiculo {
     private double tarifaPorHora;
     private LocalDateTime fechaRegistro;
 
-    // Constructor vacio
     public Vehiculo() {
     }
 
-    // Constructor para registrar un vehiculo nuevo
     public Vehiculo(String placa, String tipo, String marca, String color, String propietarioCedula, String propietarioNombre, String estado, double tarifaPorHora) {
         this.placa = placa;
         this.tipo = tipo;
@@ -33,7 +31,6 @@ public class Vehiculo {
         this.fechaRegistro = LocalDateTime.now();
     }
 
-    // Constructor completo con id y fecha
     public Vehiculo(int idVehiculo, String placa, String tipo, String marca, String color, String propietarioCedula, String propietarioNombre, String estado, double tarifaPorHora, LocalDateTime fechaRegistro) {
         this.idVehiculo = idVehiculo;
         this.placa = placa;
@@ -47,7 +44,6 @@ public class Vehiculo {
         this.fechaRegistro = fechaRegistro;
     }
 
-    // Getters y Setters
     public int getIdVehiculo() {
         return idVehiculo;
     }

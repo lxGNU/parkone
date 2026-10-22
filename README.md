@@ -1,6 +1,6 @@
-# Proyecto ParkOne - Modulos Web y Movil
+# Proyecto ParkOne - Modulos Codificados y Probados
 
-**Evidencia:** GA7-220501096-AA3-EV01  
+**Evidencia:** GA7-220501096-AA3-EV02  
 **Programa:** Tecnologo en Analisis y Desarrollo de Software (ADSO)  
 **Ficha:** 3336118  
 **Aprendiz:** Brandon Yair Galvis Diaz  
@@ -10,60 +10,49 @@
 
 ## Descripcion
 
-En esta evidencia programe los modulos del sistema ParkOne para la gestion del parqueadero. Se usaron clases Java para los modelos, servicios y controladores web, asi como rutas de API REST en formato JSON para que se puedan consumir desde una aplicacion movil.
-
-Modulos creados:
-- Control de entradas y salidas de vehiculos (calculo de horas y cobro).
-- Registro de vehiculos y propietarios.
-- Gestion de usuarios y roles.
-- API REST para conectar con la app movil.
+En esta evidencia se realizaron las pruebas funcionales de los modulos del software ParkOne:
+- Modulo Stand-alone (consola con pruebas de logica de negocio y validaciones).
+- Modulo Web (panel de control, entradas, salidas, liquidacion de horas y cobro).
+- Modulo Movil y API REST (endpoints JSON para aplicaciones moviles).
 
 ---
 
-## Estructura de Carpetas
+## Como Ejecutar las Pruebas y la Aplicacion
 
-Nota: usando el comando **tree** en Gnu/Linux (mx linux 25)
+### En Linux / Mac:
+```bash
+chmod +x compile.sh run.sh test.sh
+./compile.sh   # Compila el codigo
+./test.sh      # Ejecuta las pruebas unitarias y validaciones
+./run.sh       # Inicia el servidor web
+```
+
+### En Windows:
+- Doble clic en `compile.bat`
+- Doble clic en `test.bat` (muestra el resultado de las 8 pruebas en consola)
+- Doble clic en `run.bat` (inicia el servidor)
+
+Abrir en el navegador: `http://localhost:8080/`
+
+Credenciales de prueba:
+- Cedula: `1061723849`
+- Clave: `123456`
+
+---
+
+## Estructura del Proyecto
 
 ```text
-ParkOne/
+BrandonYairGalvisDiaz_AA3_EV02/
 ├── ENLACE_REPOSITORIO.txt
 ├── README.md
-├── pom.xml
 ├── compile.sh / compile.bat
+├── test.sh / test.bat
 ├── run.sh / run.bat
 ├── sql/
 │   └── parkone_db.sql
-└── src/
-    └── main/
-        ├── java/co/edu/sena/parkone/
-        │   ├── ParkOneApplication.java
-        │   ├── model/
-        │   ├── repository/
-        │   ├── service/
-        │   ├── controller/
-        │   └── server/
-        └── resources/
-            └── static/css/
-                └── style.css
+├── src/
+│   ├── main/java/co/edu/sena/parkone/  (Codigo del proyecto)
+│   └── test/java/co/edu/sena/parkone/  (Pruebas de validaciones)
+└── EVIDENCIA_GA7_220501096_AA3_EV02_BRANDON_GALVIS.docx
 ```
-
----
-
-## Como Ejecutar
-
-En Linux / Mac:
-```bash
-./compile.sh
-./run.sh
-```
-
-En Windows:
-- Doble clic en `compile.bat`
-- Doble clic en `run.bat`
-
-Abrir el navegador en `http://localhost:8080/`
-
----
-
-## Base de Datos
-El script SQL para MySQL esta en `sql/parkone_db.sql`.

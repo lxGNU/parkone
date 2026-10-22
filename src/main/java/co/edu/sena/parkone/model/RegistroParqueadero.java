@@ -3,7 +3,7 @@ package co.edu.sena.parkone.model;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-// Clase modelo para el registro de entrada, salida y cobro del parqueadero
+// Modelo de registro
 public class RegistroParqueadero {
 
     private int idRegistro;
@@ -18,14 +18,11 @@ public class RegistroParqueadero {
     private String estado; // ACTIVO o FINALIZADO
     private String observaciones;
 
-    // Formateador de fecha para mostrar al usuario
     private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    // Constructor vacio
     public RegistroParqueadero() {
     }
 
-    // Constructor para registrar un nuevo ingreso
     public RegistroParqueadero(String placaVehiculo, String tipoVehiculo, String propietarioNombre, double tarifaAplicada, String observaciones) {
         this.placaVehiculo = placaVehiculo;
         this.tipoVehiculo = tipoVehiculo;
@@ -38,7 +35,6 @@ public class RegistroParqueadero {
         this.horasCobradas = 0;
     }
 
-    // Constructor completo
     public RegistroParqueadero(int idRegistro, String placaVehiculo, String tipoVehiculo, String propietarioNombre, LocalDateTime fechaEntrada, LocalDateTime fechaSalida, int horasCobradas, double tarifaAplicada, double totalPagar, String estado, String observaciones) {
         this.idRegistro = idRegistro;
         this.placaVehiculo = placaVehiculo;
@@ -53,17 +49,14 @@ public class RegistroParqueadero {
         this.observaciones = observaciones;
     }
 
-    // Retorna la fecha de entrada como texto formateado
     public String getFechaEntradaFormateada() {
         return (fechaEntrada != null) ? fechaEntrada.format(FORMATO) : "";
     }
 
-    // Retorna la fecha de salida como texto formateado
     public String getFechaSalidaFormateada() {
         return (fechaSalida != null) ? fechaSalida.format(FORMATO) : "En parqueadero";
     }
 
-    // Getters y Setters
     public int getIdRegistro() {
         return idRegistro;
     }

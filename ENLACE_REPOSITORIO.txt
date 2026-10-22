@@ -1,5 +1,5 @@
 ==================================================================
-ENLACE DEL REPOSITORIO - EVIDENCIA GA7-220501096-AA3-EV01
+ENLACE DEL REPOSITORIO Y PRUEBAS - EVIDENCIA GA7-220501096-AA3-EV02
 ==================================================================
 
 Programa: Tecnologo en Analisis y Desarrollo de Software (ADSO)
@@ -7,7 +7,7 @@ Ficha: 3336118
 Aprendiz: Brandon Yair Galvis Diaz
 Centro: SENA Regional Cauca
 
-Evidencia: Codificación de módulos del software stand-alone, web y móvil (GA7-220501096-AA3-EV01)
+Evidencia: Modulos de software stand-alone, web y movil codificados y probados (GA7-220501096-AA3-EV02)
 
 Enlace del Repositorio en GitHub:
 https://github.com/lxGNU/parkone
@@ -15,31 +15,29 @@ https://github.com/lxGNU/parkone
 Rama (Branch) de esta evidencia:
 https://github.com/lxGNU/parkone/tree/master
 
+Enlace del Video de Demostracion (YouTube / Drive):
+[Pegar aqui el enlace de tu video de Drive o YouTube si no lo adjuntas en el ZIP]
+
 Instrucciones para compilar y ejecutar el proyecto:
 
-1. Clonar el repositorio:
-   git clone https://github.com/lxGNU/parkone.git
-   cd parkone
-
-2. En Linux / Mac:
-   dar permisos: chmod +x compile.sh run.sh
+1. En Linux / Mac:
+   dar permisos: chmod +x compile.sh run.sh test.sh
    compilar:    ./compile.sh
+   probar:      ./test.sh
    ejecutar:    ./run.sh
 
-3. En Windows:
-   Ejecutar compile.bat
-   Ejecutar run.bat
+2. En Windows:
+   Doble clic en compile.bat
+   Doble clic en test.bat  (para ver las pruebas aprobadas en consola)
+   Doble clic en run.bat   (para iniciar el servidor)
 
-4. Abrir en el navegador (Web y Móvil responsive):
+3. Abrir en el navegador (Web y Movil):
    http://localhost:8080/
 
-5. Endpoints API REST para consumo de aplicaciones móviles:
+4. Endpoints API REST para consumo movil:
+   http://localhost:8080/api/dashboard
    http://localhost:8080/api/vehiculos
    http://localhost:8080/api/registros
-   http://localhost:8080/api/dashboard
-
-6. Archivo SQL de Base de Datos MySQL:
-   sql/parkone_db.sql
 
 Credenciales de prueba para ingresar al sistema:
    Cedula: 1061723849

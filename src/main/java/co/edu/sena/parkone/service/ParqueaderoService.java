@@ -10,13 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Servicio de negocio para el control de ingresos, salidas y liquidacion del parqueadero
+// Logica del parqueadero
 public class ParqueaderoService {
 
     private final RegistroParqueaderoRepository registroRepository;
     private final VehiculoService vehiculoService;
 
-    // Capacidad maxima total del parqueadero (50 cupos)
     private static final int CAPACIDAD_MAXIMA = 50;
 
     public ParqueaderoService(RegistroParqueaderoRepository registroRepository, VehiculoService vehiculoService) {
@@ -24,30 +23,24 @@ public class ParqueaderoService {
         this.vehiculoService = vehiculoService;
     }
 
-    // Listar todos los registros
     public List<RegistroParqueadero> obtenerTodos() {
         return registroRepository.listarTodos();
     }
 
-    // Listar registros activos (vehiculos dentro del parqueadero)
     public List<RegistroParqueadero> obtenerActivos() {
         return registroRepository.listarActivos();
     }
 
-    // Buscar con filtro
     public List<RegistroParqueadero> buscar(String filtro) {
         return registroRepository.buscarPorFiltro(filtro);
     }
 
-    // Registrar ingreso de un vehiculo
     public RegistroParqueadero registrarIngreso(String placa, String tipo, String propietario, String observaciones) {
-        // Validar si el vehiculo ya tiene una entrada activa
         RegistroParqueadero existe = registroRepository.buscarActivoPorPlaca(placa);
         if (existe != null) {
             throw new IllegalArgumentException("El vehículo con placa " + placa + " ya tiene un ingreso activo en el parqueadero.");
         }
 
-        // Obtener o registrar vehiculo
         Vehiculo vehiculo = vehiculoService.obtenerPorPlaca(placa);
         double tarifa = 4000.0;
         if (vehiculo != null) {
@@ -63,7 +56,6 @@ public class ParqueaderoService {
         return registroRepository.guardar(nuevo);
     }
 
-    // Registrar salida del vehiculo y calcular la tarifa final a pagar
     public RegistroParqueadero registrarSalida(int idRegistro) {
         RegistroParqueadero registro = registroRepository.buscarPorId(idRegistro);
         if (registro == null) {
@@ -77,11 +69,10 @@ public class ParqueaderoService {
         LocalDateTime fechaSalida = LocalDateTime.now();
         registro.setFechaSalida(fechaSalida);
 
-        // Calcular la diferencia de horas entre entrada y salida
         Duration duracion = Duration.between(registro.getFechaEntrada(), fechaSalida);
         long minutosTotal = duracion.toMinutes();
 
-        // Minimo cobro de 1 hora, de ahi en adelante se redondea la hora o fraccion
+        // Minimo 1 hora
         int horas = (int) Math.max(1, Math.ceil(minutosTotal / 60.0));
         double total = horas * registro.getTarifaAplicada();
 
@@ -89,7 +80,6 @@ public class ParqueaderoService {
         registro.setTotalPagar(total);
         registro.setEstado("FINALIZADO");
 
-        // Actualizar estado del vehiculo a Retirado
         Vehiculo v = vehiculoService.obtenerPorPlaca(registro.getPlacaVehiculo());
         if (v != null) {
             v.setEstado("Retirado");
@@ -99,7 +89,6 @@ public class ParqueaderoService {
         return registro;
     }
 
-    // Obtener resumen de estadisticas para el tablero del sistema
     public Map<String, Object> obtenerEstadisticas() {
         Map<String, Object> stats = new HashMap<>();
 

@@ -7,29 +7,25 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-// Repositorio para gestionar la persistencia de las entradas, salidas y tickets
+// Datos de parqueadero
 public class RegistroParqueaderoRepository {
 
     private final List<RegistroParqueadero> listaRegistros = new ArrayList<>();
     private final AtomicInteger contadorId = new AtomicInteger(1);
 
     public RegistroParqueaderoRepository() {
-        // Inicialmente vacio para que el usuario ingrese las entradas y salidas
     }
 
-    // Listar todos los registros de entrada y salida
     public List<RegistroParqueadero> listarTodos() {
         return new ArrayList<>(listaRegistros);
     }
 
-    // Listar solo registros activos (vehiculos actualmente en el parqueadero)
     public List<RegistroParqueadero> listarActivos() {
         return listaRegistros.stream()
                 .filter(r -> "ACTIVO".equalsIgnoreCase(r.getEstado()))
                 .collect(Collectors.toList());
     }
 
-    // Buscar registro por ID
     public RegistroParqueadero buscarPorId(int id) {
         return listaRegistros.stream()
                 .filter(r -> r.getIdRegistro() == id)
@@ -37,7 +33,6 @@ public class RegistroParqueaderoRepository {
                 .orElse(null);
     }
 
-    // Buscar registro activo de un vehiculo por su placa
     public RegistroParqueadero buscarActivoPorPlaca(String placa) {
         if (placa == null) return null;
         return listaRegistros.stream()
@@ -46,7 +41,6 @@ public class RegistroParqueaderoRepository {
                 .orElse(null);
     }
 
-    // Buscar por filtro de placa o propietario
     public List<RegistroParqueadero> buscarPorFiltro(String filtro) {
         if (filtro == null || filtro.trim().isEmpty()) {
             return listarTodos();
@@ -59,7 +53,6 @@ public class RegistroParqueaderoRepository {
                 .collect(Collectors.toList());
     }
 
-    // Registrar un nuevo ingreso de parqueadero
     public RegistroParqueadero guardar(RegistroParqueadero registro) {
         if (registro.getIdRegistro() == 0) {
             registro.setIdRegistro(contadorId.getAndIncrement());
@@ -68,7 +61,6 @@ public class RegistroParqueaderoRepository {
         return registro;
     }
 
-    // Actualizar registro (por ejemplo para marcar salida y total a pagar)
     public boolean actualizar(RegistroParqueadero registroActualizado) {
         for (int i = 0; i < listaRegistros.size(); i++) {
             if (listaRegistros.get(i).getIdRegistro() == registroActualizado.getIdRegistro()) {

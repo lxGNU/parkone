@@ -1,12 +1,8 @@
--- Script de Base de Datos para el Sistema ParkOne
--- Evidencia GA7-220501096-AA3-EV01
--- Aprendiz: Brandon Yair Galvis Diaz
--- Ficha: 3336118
-
+-- Base de datos ParkOne
 CREATE DATABASE IF NOT EXISTS parkone_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE parkone_db;
 
--- Tabla de Usuarios
+-- Usuarios
 CREATE TABLE IF NOT EXISTS usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     identificacion VARCHAR(20) NOT NULL UNIQUE,
@@ -21,7 +17,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla de Vehiculos
+-- Vehiculos
 CREATE TABLE IF NOT EXISTS vehiculos (
     id_vehiculo INT AUTO_INCREMENT PRIMARY KEY,
     placa VARCHAR(10) NOT NULL UNIQUE,
@@ -35,7 +31,7 @@ CREATE TABLE IF NOT EXISTS vehiculos (
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla de Registros de Parqueadero (Entradas y Salidas)
+-- Registros de parqueadero
 CREATE TABLE IF NOT EXISTS registros_parqueadero (
     id_registro INT AUTO_INCREMENT PRIMARY KEY,
     placa_vehiculo VARCHAR(10) NOT NULL,
@@ -50,7 +46,7 @@ CREATE TABLE IF NOT EXISTS registros_parqueadero (
     observaciones VARCHAR(255)
 );
 
--- Usuario Administrador por defecto para ingresar al sistema
+-- Usuario admin inicial
 INSERT INTO usuarios (identificacion, nombres, apellidos, cargo, rol, correo, contrasena, telefono, direccion)
 VALUES 
 ('1061723849', 'Brandon Yair', 'Galvis Diaz', 'Administrador de Sistema', 'Administrador', 'brandon.galvis@sena.edu.co', '123456', '3124567890', 'Popayán, Cauca');

@@ -17,6 +17,7 @@ import co.edu.sena.parkone.service.VehiculoService;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -178,18 +179,35 @@ public class ServidorWeb {
 
                 if ("ingresar".equalsIgnoreCase(accion)) {
                     try {
-                        parqueaderoService.registrarIngreso(
-                            postParams.get("placa"),
-                            postParams.get("tipo"),
-                            postParams.get("propietario"),
-                            postParams.get("observaciones")
-                        );
+                        String placa = postParams.get("placa");
+                        String tipo = postParams.get("tipo");
+                        String propietario = postParams.get("propietario");
+                        String observaciones = postParams.get("observaciones");
+
+                        // Validacion de placa
+                        if (placa == null || placa.trim().length() < 5) {
+                            redirect(exchange, "/control?accion=nuevo&error=" + URLEncoder.encode("La placa debe tener minimo 5 caracteres.", StandardCharsets.UTF_8));
+                            return;
+                        }
+
+                        // Validacion de propietario
+                        if (propietario == null || propietario.trim().length() < 3) {
+                            redirect(exchange, "/control?accion=nuevo&error=" + URLEncoder.encode("El nombre del propietario debe tener minimo 3 caracteres.", StandardCharsets.UTF_8));
+                            return;
+                        }
+
+                        parqueaderoService.registrarIngreso(placa, tipo, propietario, observaciones);
+                        redirect(exchange, "/control?msg=" + URLEncoder.encode("Vehiculo ingresado correctamente.", StandardCharsets.UTF_8));
+                        return;
                     } catch (Exception e) {
-                        // Manejo de error si la placa ya esta en el parqueadero
+                        redirect(exchange, "/control?accion=nuevo&error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+                        return;
                     }
                 } else if ("salida".equalsIgnoreCase(accion)) {
                     int idReg = Integer.parseInt(postParams.getOrDefault("idRegistro", "0"));
                     parqueaderoService.registrarSalida(idReg);
+                    redirect(exchange, "/control?msg=" + URLEncoder.encode("Salida registrada con exito.", StandardCharsets.UTF_8));
+                    return;
                 }
                 redirect(exchange, "/control");
                 return;
@@ -197,21 +215,28 @@ public class ServidorWeb {
 
             String accion = queryParams.getOrDefault("accion", "listar");
             if ("nuevo".equalsIgnoreCase(accion)) {
-                renderFormularioIngreso(exchange);
+                renderFormularioIngreso(exchange, queryParams.get("error"));
             } else if ("ticket".equalsIgnoreCase(accion)) {
                 int idReg = Integer.parseInt(queryParams.getOrDefault("id", "0"));
                 renderTicketCobro(exchange, idReg);
             } else {
-                renderListaControl(exchange, queryParams.get("filtro"));
+                renderListaControl(exchange, queryParams.get("filtro"), queryParams.get("msg"), queryParams.get("error"));
             }
         }
 
-        private void renderListaControl(HttpExchange exchange, String filtro) throws IOException {
+        private void renderListaControl(HttpExchange exchange, String filtro, String msg, String error) throws IOException {
             List<RegistroParqueadero> lista = (filtro != null && !filtro.isEmpty()) ? parqueaderoService.buscar(filtro) : parqueaderoService.obtenerTodos();
 
             StringBuilder sb = new StringBuilder();
             sb.append("<div class='titulo-pagina'><h2>Control de Entradas y Salidas</h2>");
             sb.append("<p>Módulo de registro en tiempo real y facturación de parqueadero</p></div>");
+
+            if (msg != null && !msg.isEmpty()) {
+                sb.append("<div class='alert alert-success'>✓ ").append(escapeHtml(msg)).append("</div>");
+            }
+            if (error != null && !error.isEmpty()) {
+                sb.append("<div class='alert alert-danger'>⚠ ").append(escapeHtml(error)).append("</div>");
+            }
 
             sb.append("<div class='card-container'><div class='toolbar'>");
             sb.append("<form action='/control' method='get' class='search-bar'>");
@@ -257,18 +282,22 @@ public class ServidorWeb {
             sendResponse(exchange, 200, renderFullLayout("Control Parqueadero", sb.toString()));
         }
 
-        private void renderFormularioIngreso(HttpExchange exchange) throws IOException {
+        private void renderFormularioIngreso(HttpExchange exchange, String error) throws IOException {
             StringBuilder sb = new StringBuilder();
             sb.append("<div class='titulo-pagina'><h2>Registrar Entrada de Vehículo</h2>");
             sb.append("<p>Ingrese la información para la entrada al parqueadero</p></div>");
+
+            if (error != null && !error.isEmpty()) {
+                sb.append("<div class='alert alert-danger'>⚠ ").append(escapeHtml(error)).append("</div>");
+            }
 
             sb.append("<div class='card-container' style='max-width:700px; margin:0 auto;'>");
             sb.append("<form action='/control' method='post'>");
             sb.append("<input type='hidden' name='accion' value='ingresar'>");
             sb.append("<div class='form-grid'>");
-            sb.append("<div class='form-group'><label>Placa del Vehículo *</label><input type='text' name='placa' required placeholder='Ej: KRF-502' style='text-transform:uppercase;'></div>");
+            sb.append("<div class='form-group'><label>Placa del Vehículo *</label><input type='text' name='placa' required placeholder='Ej: KRF-502' style='text-transform:uppercase;' pattern='[A-Za-z0-9\\-]{5,8}' minlength='5' maxlength='8' title='Placa de 5 a 8 caracteres'></div>");
             sb.append("<div class='form-group'><label>Tipo de Vehículo *</label><select name='tipo'><option value='Automóvil'>Automóvil ($4,000/h)</option><option value='Motocicleta'>Motocicleta ($2,000/h)</option><option value='Camioneta'>Camioneta ($6,000/h)</option></select></div>");
-            sb.append("<div class='form-group' style='grid-column: 1 / -1;'><label>Nombre del Propietario / Conductor *</label><input type='text' name='propietario' required placeholder='Ej: Brandon Yair Galvis Diaz'></div>");
+            sb.append("<div class='form-group' style='grid-column: 1 / -1;'><label>Nombre del Propietario / Conductor *</label><input type='text' name='propietario' required placeholder='Ej: Brandon Yair Galvis Diaz' pattern='[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]{3,60}' minlength='3' maxlength='60' title='Solo letras y espacios'></div>");
             sb.append("<div class='form-group' style='grid-column: 1 / -1;'><label>Observaciones de Ingreso</label><input type='text' name='observaciones' placeholder='Sin rayones, bahía número 4...'></div>");
             sb.append("</div>");
             sb.append("<div class='form-actions'>");
@@ -450,35 +479,56 @@ public class ServidorWeb {
             if ("POST".equalsIgnoreCase(method)) {
                 String body = readRequestBody(exchange);
                 Map<String, String> postParams = parseQueryParams(body);
-                double tarifa = Double.parseDouble(postParams.getOrDefault("tarifaPorHora", "4000"));
-                Vehiculo v = new Vehiculo(postParams.get("placa"), postParams.get("tipo"), postParams.get("marca"), postParams.get("color"), postParams.get("propietarioCedula"), postParams.get("propietarioNombre"), "Estacionado", tarifa);
-                vehiculoService.guardar(v);
-                redirect(exchange, "/vehiculos");
-                return;
+                try {
+                    String placa = postParams.get("placa");
+                    String tipo = postParams.get("tipo");
+                    String marca = postParams.get("marca");
+                    String color = postParams.get("color");
+                    String cedula = postParams.get("propietarioCedula");
+                    String nombre = postParams.get("propietarioNombre");
+                    double tarifa = Double.parseDouble(postParams.getOrDefault("tarifaPorHora", "4000"));
+
+                    if (tarifa < 1000) {
+                        redirect(exchange, "/vehiculos?accion=nuevo&error=" + URLEncoder.encode("La tarifa minima permitida es $1000.", StandardCharsets.UTF_8));
+                        return;
+                    }
+
+                    Vehiculo v = new Vehiculo(placa, tipo, marca, color, cedula, nombre, "Estacionado", tarifa);
+                    vehiculoService.guardar(v);
+                    redirect(exchange, "/vehiculos?msg=" + URLEncoder.encode("Vehiculo registrado con exito.", StandardCharsets.UTF_8));
+                    return;
+                } catch (Exception e) {
+                    redirect(exchange, "/vehiculos?accion=nuevo&error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+                    return;
+                }
             }
 
             String accion = queryParams.getOrDefault("accion", "listar");
             if ("nuevo".equalsIgnoreCase(accion)) {
-                renderFormularioVehiculo(exchange);
+                renderFormularioVehiculo(exchange, queryParams.get("error"));
             } else if ("eliminar".equalsIgnoreCase(accion)) {
                 int id = Integer.parseInt(queryParams.getOrDefault("id", "0"));
                 vehiculoService.eliminar(id);
-                redirect(exchange, "/vehiculos");
+                redirect(exchange, "/vehiculos?msg=" + URLEncoder.encode("Vehiculo eliminado.", StandardCharsets.UTF_8));
             } else {
-                renderListaVehiculos(exchange, queryParams.get("filtro"));
+                renderListaVehiculos(exchange, queryParams.get("filtro"), queryParams.get("msg"));
             }
         }
 
-        private void renderListaVehiculos(HttpExchange exchange, String filtro) throws IOException {
+        private void renderListaVehiculos(HttpExchange exchange, String filtro, String msg) throws IOException {
             List<Vehiculo> lista = vehiculoService.buscar(filtro);
 
             StringBuilder sb = new StringBuilder();
             sb.append("<div class='titulo-pagina'><h2>Gestión de Vehículos</h2>");
             sb.append("<p>Módulo de vehículos y tarifas por categoría</p></div>");
 
+            if (msg != null && !msg.isEmpty()) {
+                sb.append("<div class='alert alert-success'>✓ ").append(escapeHtml(msg)).append("</div>");
+            }
+
             sb.append("<div class='card-container'><div class='toolbar'>");
             sb.append("<form action='/vehiculos' method='get' class='search-bar'>");
-            sb.append("<input type='text' name='filtro' placeholder='Buscar por placa o céduala...' value='").append(filtro != null ? escapeHtml(filtro) : "").append("'>");
+            sb.append("<input type='text' name='filtro' placeholder='Buscar por placa o cédula...' value='").append(filtro != null ? escapeHtml(filtro) : "").append("'>");
             sb.append("<button type='submit' class='btn btn-primary'>Buscar</button>");
             if (filtro != null) {
                 sb.append("<a href='/vehiculos' class='btn btn-secondary btn-sm'>Limpiar</a>");
@@ -510,21 +560,25 @@ public class ServidorWeb {
             sendResponse(exchange, 200, renderFullLayout("Vehículos", sb.toString()));
         }
 
-        private void renderFormularioVehiculo(HttpExchange exchange) throws IOException {
+        private void renderFormularioVehiculo(HttpExchange exchange, String error) throws IOException {
             StringBuilder sb = new StringBuilder();
             sb.append("<div class='titulo-pagina'><h2>Registrar Vehículo</h2>");
             sb.append("<p>Información del vehículo y propietario</p></div>");
 
+            if (error != null && !error.isEmpty()) {
+                sb.append("<div class='alert alert-danger'>⚠ ").append(escapeHtml(error)).append("</div>");
+            }
+
             sb.append("<div class='card-container' style='max-width:800px; margin:0 auto;'>");
             sb.append("<form action='/vehiculos' method='post'>");
             sb.append("<div class='form-grid'>");
-            sb.append("<div class='form-group'><label>Placa *</label><input type='text' name='placa' required placeholder='Ej: KRF-502' style='text-transform:uppercase;'></div>");
+            sb.append("<div class='form-group'><label>Placa *</label><input type='text' name='placa' required placeholder='Ej: KRF-502' style='text-transform:uppercase;' pattern='[A-Za-z0-9\\-]{5,8}' minlength='5' maxlength='8' title='Placa de 5 a 8 caracteres'></div>");
             sb.append("<div class='form-group'><label>Tipo *</label><select name='tipo'><option value='Automóvil'>Automóvil</option><option value='Motocicleta'>Motocicleta</option><option value='Camioneta'>Camioneta</option></select></div>");
-            sb.append("<div class='form-group'><label>Marca</label><input type='text' name='marca' placeholder='Toyota'></div>");
-            sb.append("<div class='form-group'><label>Color</label><input type='text' name='color' placeholder='Negro'></div>");
-            sb.append("<div class='form-group'><label>Cédula del Propietario *</label><input type='text' name='propietarioCedula' required placeholder='1061723849'></div>");
-            sb.append("<div class='form-group'><label>Nombre del Propietario *</label><input type='text' name='propietarioNombre' required placeholder='Brandon Yair Galvis Diaz'></div>");
-            sb.append("<div class='form-group'><label>Tarifa por Hora ($) *</label><input type='number' name='tarifaPorHora' value='4000' required></div>");
+            sb.append("<div class='form-group'><label>Marca</label><input type='text' name='marca' placeholder='Toyota' maxlength='30'></div>");
+            sb.append("<div class='form-group'><label>Color</label><input type='text' name='color' placeholder='Negro' maxlength='20'></div>");
+            sb.append("<div class='form-group'><label>Cédula del Propietario *</label><input type='text' name='propietarioCedula' required placeholder='1061723849' pattern='[0-9]{6,10}' minlength='6' maxlength='10' title='Cédula de 6 a 10 dígitos numéricos'></div>");
+            sb.append("<div class='form-group'><label>Nombre del Propietario *</label><input type='text' name='propietarioNombre' required placeholder='Brandon Yair Galvis Diaz' pattern='[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]{3,60}' minlength='3' maxlength='60' title='Solo letras y espacios'></div>");
+            sb.append("<div class='form-group'><label>Tarifa por Hora ($) *</label><input type='number' name='tarifaPorHora' value='4000' min='1000' max='50000' step='500' required></div>");
             sb.append("</div>");
             sb.append("<div class='form-actions'>");
             sb.append("<a href='/vehiculos' class='btn btn-secondary'>Cancelar</a>");
@@ -670,7 +724,7 @@ public class ServidorWeb {
                 "<main class='contenedor-principal'>" + content + "</main>" +
                 "<footer><div>Popayán - Cauca</div>" +
                 "<div>SENA - Tecnólogo ADSO</div>" +
-                "<div style='margin-top:0.25rem;'>Evidencia GA7-220501096-AA3-EV01 &copy; 2026</div></footer></body></html>";
+                "<div style='margin-top:0.25rem;'>Evidencia GA7-220501096-AA3-EV02 &copy; 2026</div></footer></body></html>";
     }
 
     private static void sendResponse(HttpExchange exchange, int status, String response) throws IOException {

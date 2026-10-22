@@ -2,7 +2,7 @@ package co.edu.sena.parkone.model;
 
 import java.time.LocalDateTime;
 
-// Clase modelo para guardar los datos del usuario del sistema
+// Modelo de usuario
 public class Usuario {
 
     private int idUsuario;
@@ -17,11 +17,9 @@ public class Usuario {
     private String direccion;
     private LocalDateTime fechaRegistro;
 
-    // Constructor vacio
     public Usuario() {
     }
 
-    // Constructor sin id para crear nuevos usuarios
     public Usuario(String identificacion, String nombres, String apellidos, String cargo, String rol, String correo, String contrasena, String telefono, String direccion) {
         this.identificacion = identificacion;
         this.nombres = nombres;
@@ -35,7 +33,6 @@ public class Usuario {
         this.fechaRegistro = LocalDateTime.now();
     }
 
-    // Constructor completo
     public Usuario(int idUsuario, String identificacion, String nombres, String apellidos, String cargo, String rol, String correo, String contrasena, String telefono, String direccion, LocalDateTime fechaRegistro) {
         this.idUsuario = idUsuario;
         this.identificacion = identificacion;
@@ -50,12 +47,10 @@ public class Usuario {
         this.fechaRegistro = fechaRegistro;
     }
 
-    // Devuelve el nombre completo del usuario
     public String getNombreCompleto() {
         return nombres + " " + apellidos;
     }
 
-    // Getters y Setters
     public int getIdUsuario() {
         return idUsuario;
     }

@@ -16,3 +16,7 @@ target/
 Thumbs.db
 *.log
 *.tmp
+*.zip
+*_ORIGINAL_CON_CAPTURAS.docx
+GUIA_GRABACION_*.docx
+

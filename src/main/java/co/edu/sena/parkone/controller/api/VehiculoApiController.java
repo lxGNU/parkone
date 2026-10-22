@@ -4,7 +4,7 @@ import co.edu.sena.parkone.model.Vehiculo;
 import co.edu.sena.parkone.service.VehiculoService;
 import java.util.List;
 
-// Controlador API REST para consultar vehiculos desde aplicaciones moviles
+// API de vehiculos
 public class VehiculoApiController {
 
     private final VehiculoService vehiculoService;
@@ -13,12 +13,10 @@ public class VehiculoApiController {
         this.vehiculoService = vehiculoService;
     }
 
-    // Retorna todos los vehiculos en formato JSON
     public List<Vehiculo> listarVehiculos() {
         return vehiculoService.obtenerTodos();
     }
 
-    // Buscar un vehiculo por su placa
     public Vehiculo obtenerPorPlaca(String placa) {
         return vehiculoService.obtenerPorPlaca(placa);
     }
