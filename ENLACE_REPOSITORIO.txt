@@ -1,13 +1,4 @@
-==================================================================
 ENLACE DEL REPOSITORIO Y PRUEBAS - EVIDENCIA GA7-220501096-AA3-EV02
-==================================================================
-
-Programa: Tecnologo en Analisis y Desarrollo de Software (ADSO)
-Ficha: 3336118
-Aprendiz: Brandon Yair Galvis Diaz
-Centro: SENA Regional Cauca
-
-Evidencia: Modulos de software stand-alone, web y movil codificados y probados (GA7-220501096-AA3-EV02)
 
 Enlace del Repositorio en GitHub:
 https://github.com/lxGNU/parkone
@@ -16,11 +7,11 @@ Rama (Branch) de esta evidencia:
 https://github.com/lxGNU/parkone/tree/master
 
 Enlace del Video de Demostracion (YouTube / Drive):
-[Pegar aqui el enlace de tu video de Drive o YouTube si no lo adjuntas en el ZIP]
+https://youtu.be/BTjvau53sSo
 
 Instrucciones para compilar y ejecutar el proyecto:
 
-1. En Linux / Mac:
+1. En Linux:
    dar permisos: chmod +x compile.sh run.sh test.sh
    compilar:    ./compile.sh
    probar:      ./test.sh
@@ -42,4 +33,3 @@ Instrucciones para compilar y ejecutar el proyecto:
 Credenciales de prueba para ingresar al sistema:
    Cedula: 1061723849
    Clave:  123456
-==================================================================
