@@ -1,34 +1,24 @@
 /**
  * ============================================================================
  * SISTEMA DE GESTION DE PARQUEADEROS - PARKONE
- * Componente Front-End: Logica de Control de Entradas, Salidas y Taquilla
+ * Modulo Front-End: Control de Parqueadero (Entradas, Salidas y Cobro)
  * Archivo: js/inventario.js
  * Evidencia: GA7-220501096-AA4-EV03
  * Aprendiz: Brandon Yair Galvis Diaz
  * Ficha: 3336118 - ADSO SENA Regional Cauca - 2026
  * ============================================================================
  * Descripcion:
- * Implementa la logica del lado cliente para el modulo de control operativo.
- * Maneja eventos del formulario, validaciones de placa (longitud y no duplicidad),
- * liquidacion de tarifas segun el tiempo transcurrido, generacion de tickets
- * termicos con opcion de impresion, y persistencia en LocalStorage.
+ * Gestiona el registro operativo de ingresos, la validacion estricta de 
+ * placas duplicadas en patio, la emision de tickets termicos, y la liquidacion
+ * de salidas con calculo automatico de tiempo transcurrido y tarifa.
  * ============================================================================
  */
 
-// Estado local de la vista
-let pestanaActual = 'ACTIVO';
-let vehiculoEnLiquidacion = null;
-let liquidacionCalculada = null;
+let registroEnLiquidacion = null;
+let calculoCobroActual = null;
 
 /**
- * Inicializa la tabla y los escuchadores al cargar el script.
- */
-document.addEventListener('DOMContentLoaded', () => {
-    renderizarTablaControl();
-});
-
-/**
- * Alterna la visualización del formulario para nuevo ingreso.
+ * Alterna la visualizacion del formulario de nuevo ingreso.
  */
 function toggleFormIngreso() {
     const panel = document.getElementById('panelNuevoIngreso');
@@ -44,29 +34,8 @@ function toggleFormIngreso() {
 }
 
 /**
- * Cambia la pestaña activa de la tabla entre vehículos en patio y finalizados.
- * @param {string} estado 'ACTIVO' o 'FINALIZADO'
- */
-function cambiarPestana(estado) {
-    pestanaActual = estado;
-
-    const btnActivos = document.getElementById('tabActivos');
-    const btnSalidas = document.getElementById('tabSalidas');
-
-    if (estado === 'ACTIVO') {
-        btnActivos.className = 'btn btn-primary btn-sm';
-        btnSalidas.className = 'btn btn-secondary btn-sm';
-    } else {
-        btnActivos.className = 'btn btn-secondary btn-sm';
-        btnSalidas.className = 'btn btn-primary btn-sm';
-    }
-
-    renderizarTablaControl();
-}
-
-/**
- * Muestra alertas temporales en la parte superior de la página.
- * @param {string} mensaje Texto a mostrar
+ * Muestra alertas visuales de exito o error en pantalla.
+ * @param {string} mensaje 
  * @param {string} tipo 'success' o 'danger'
  */
 function mostrarAlerta(mensaje, tipo = 'success') {
@@ -80,7 +49,6 @@ function mostrarAlerta(mensaje, tipo = 'success') {
         </div>
     `;
 
-    // Desaparece automáticamente después de 4.5 segundos
     setTimeout(() => {
         if (box.innerHTML.includes(mensaje)) {
             box.innerHTML = '';
@@ -89,96 +57,82 @@ function mostrarAlerta(mensaje, tipo = 'success') {
 }
 
 /**
- * Procesa el envío del formulario de registro de entrada vehicular.
- * Aplica validaciones estrictas requeridas en la evidencia formativa.
- * @param {Event} e Evento submit
+ * Procesa el formulario de entrada vehicular con validaciones de placa.
+ * @param {Event} e 
  */
-function procesarIngreso(e) {
+function guardarIngreso(e) {
     e.preventDefault();
 
-    // 1. Capturar y sanitizar datos del formulario
     const placa = document.getElementById('inPlaca').value.trim().toUpperCase();
     const tipo = document.getElementById('inTipo').value;
     const propietario = document.getElementById('inPropietario').value.trim();
-    const bahia = document.getElementById('inBahia').value.trim();
+    const bahia = document.getElementById('inObservacion').value.trim() || 'General';
 
-    // 2. Validación de longitud de placa vehicular (Estándar Colombia mínimo 5-6 caracteres)
+    // 1. Validar longitud minima de placa colombiana
     if (!placa || placa.length < 5) {
-        mostrarAlerta('La placa ingresada no es válida. Debe tener al menos 5 caracteres alfanuméricos.', 'danger');
+        mostrarAlerta('La placa ingresada debe tener al menos 5 caracteres alfanumericos.', 'danger');
         document.getElementById('inPlaca').focus();
         return;
     }
 
     const registros = getRegistros();
 
-    // 3. Validación de regla de negocio: Comprobar placa duplicada en patio
-    const yaExisteEnPatio = registros.some(r => r.placa === placa && r.estado === 'ACTIVO');
-    if (yaExisteEnPatio) {
-        mostrarAlerta(`RESTRICCIÓN: El vehículo con placa [${placa}] ya se encuentra registrado actualmente dentro del patio.`, 'danger');
+    // 2. REGLA DE NEGOCIO (HU04): Bloqueo estricto de placa duplicada en patio
+    const yaEstaEnPatio = registros.some(r => r.placa === placa && r.estado === 'ACTIVO');
+    if (yaEstaEnPatio) {
+        mostrarAlerta(`RESTRICCIÓN: El vehículo con placa [${placa}] ya se encuentra registrado actualmente dentro del parqueadero.`, 'danger');
         document.getElementById('inPlaca').focus();
         return;
     }
 
-    // 4. Validación de capacidad máxima del parqueadero
-    const activosActuales = registros.filter(r => r.estado === 'ACTIVO').length;
-    if (activosActuales >= CAPACIDAD_MAXIMA_PARQUEADERO) {
-        mostrarAlerta('CAPACIDAD MÁXIMA ALCANZADA: No hay celdas libres disponibles en este momento.', 'danger');
+    // 3. Validar capacidad maxima
+    const ocupados = registros.filter(r => r.estado === 'ACTIVO').length;
+    if (ocupados >= CAPACIDAD_MAXIMA) {
+        mostrarAlerta('CAPACIDAD MÁXIMA ALCANZADA: No hay bahías libres disponibles.', 'danger');
         return;
     }
 
-    // 5. Determinar tarifa base por tipo
-    const tarifas = getTarifas();
-    const tarifaAplicada = tarifas[tipo] || 3500;
-    const operadorActual = getUsuarioSesion();
-
-    // 6. Generar el nuevo objeto registro
+    const tarifaAplicada = TARIFAS_HORA[tipo] || 3500;
     const nuevoId = registros.length > 0 ? Math.max(...registros.map(r => r.id)) + 1 : 101;
-    const nuevoRegistro = {
+    const fechaHora = obtenerFechaHoraActual();
+
+    const nuevo = {
         id: nuevoId,
         placa: placa,
         tipo: tipo,
         propietario: propietario,
-        bahia: bahia,
-        horaIngreso: obtenerFechaHoraActual(),
+        observaciones: bahia,
+        horaIngreso: fechaHora,
         horaSalida: null,
         tarifaAplicada: tarifaAplicada,
         totalPagado: 0,
-        estado: 'ACTIVO',
-        operadorIngreso: `${operadorActual.nombres} ${operadorActual.apellidos}`
+        estado: 'ACTIVO'
     };
 
-    // 7. Persistir en LocalStorage
-    registros.unshift(nuevoRegistro);
+    registros.unshift(nuevo);
     saveRegistros(registros);
 
-    // 8. Limpiar y ocultar formulario
     document.getElementById('formIngreso').reset();
     toggleFormIngreso();
-
-    // 9. Refrescar la tabla en pantalla
     renderizarTablaControl();
 
-    // 10. Notificación y apertura automática del comprobante / ticket térmico
     mostrarAlerta(`Vehículo [${placa}] ingresado exitosamente en la celda ${bahia}.`, 'success');
-    mostrarTicketEntrada(nuevoRegistro);
+    mostrarTicketTermicoEntrada(nuevo);
 }
 
 /**
- * Renderiza los registros en la tabla según la pestaña activa y los filtros.
+ * Renderiza la tabla de registros operativos en control.html.
  */
 function renderizarTablaControl() {
     const registros = getRegistros();
-    const filtroTexto = (document.getElementById('txtBuscar')?.value || '').trim().toUpperCase();
+    const filtro = (document.getElementById('txtBuscar')?.value || '').trim().toUpperCase();
 
-    // Filtrar por pestaña (ACTIVO vs FINALIZADO)
-    let filtrados = registros.filter(r => r.estado === pestanaActual);
-
-    // Filtrar por texto de búsqueda
-    if (filtroTexto) {
-        filtrados = filtrados.filter(r => 
-            r.placa.toUpperCase().includes(filtroTexto) || 
-            r.propietario.toUpperCase().includes(filtroTexto) ||
-            r.bahia.toUpperCase().includes(filtroTexto)
+    let filtrados = registros;
+    if (filtro) {
+        filtrados = registros.filter(r => 
+            r.placa.toUpperCase().includes(filtro) ||
+            r.propietario.toUpperCase().includes(filtro) ||
+            (r.observaciones && r.observaciones.toUpperCase().includes(filtro))
         );
     }
 
@@ -189,7 +143,7 @@ function renderizarTablaControl() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="10" style="text-align:center; padding:25px; color:#94a3b8;">
-                    No se encontraron registros ${pestanaActual === 'ACTIVO' ? 'activos en patio' : 'en el historial de salidas'}.
+                    No se encontraron registros de parqueadero.
                 </td>
             </tr>
         `;
@@ -198,30 +152,30 @@ function renderizarTablaControl() {
 
     tbody.innerHTML = filtrados.map(r => `
         <tr>
-            <td><strong>#${r.id}</strong></td>
-            <td><span class="placa-badge">${r.placa}</span></td>
-            <td><strong>${r.tipo}</strong></td>
+            <td>${r.id}</td>
+            <td><strong style="color:#60a5fa;">${r.placa}</strong></td>
+            <td>${r.tipo}</td>
             <td>${r.propietario}</td>
-            <td><span style="color:#38bdf8; font-weight:600;">${r.bahia}</span></td>
+            <td><span style="color:#4ade80; font-weight:bold;">${r.observaciones || 'General'}</span></td>
             <td>${r.horaIngreso}</td>
             <td>${r.horaSalida || '<em style="color:#64748b;">En patio</em>'}</td>
-            <td><strong>${r.totalPagado > 0 ? formatearMoneda(r.totalPagado) : '$0'}</strong></td>
+            <td><strong>$${(Number(r.totalPagado) || 0).toLocaleString('es-CO')}</strong></td>
             <td>
-                <span class="badge ${r.estado === 'ACTIVO' ? 'badge-success' : 'badge-secondary'}">
-                    ${r.estado === 'ACTIVO' ? 'En Patio' : 'Finalizado'}
+                <span class="badge ${r.estado === 'ACTIVO' ? 'badge-parked' : 'badge-exit'}">
+                    ${r.estado === 'ACTIVO' ? 'Estacionado' : 'Finalizado'}
                 </span>
             </td>
             <td>
                 ${r.estado === 'ACTIVO' ? `
-                    <button onclick="abrirModalLiquidacion('${r.placa}')" class="btn btn-danger btn-sm" title="Calcular cobro y registrar salida">
+                    <button onclick="liquidarSalida('${r.placa}')" class="btn btn-danger btn-sm" title="Cobrar salida">
                         Cobrar Salida
                     </button>
-                    <button onclick="reimprimirTicketEntrada(${r.id})" class="btn btn-secondary btn-sm" title="Reimprimir ticket de entrada">
+                    <button onclick="reimprimirTicket(${r.id})" class="btn btn-secondary btn-sm" title="Ticket de entrada">
                         Ticket
                     </button>
                 ` : `
-                    <button onclick="verComprobanteSalida('${r.placa}')" class="btn btn-secondary btn-sm" title="Ver comprobante de pago">
-                        Ver Recibo
+                    <button onclick="reimprimirReciboFinalizado(${r.id})" class="btn btn-secondary btn-sm" title="Ver comprobante de pago">
+                        Recibo
                     </button>
                 `}
             </td>
@@ -230,297 +184,191 @@ function renderizarTablaControl() {
 }
 
 /**
- * Escucha cambios en el campo de búsqueda de la tabla.
+ * Filtra los registros por texto de placa o nombre.
  */
-function filtrarTabla() {
+function filtrarRegistros() {
     renderizarTablaControl();
 }
 
 /**
- * Abre la ventana modal para liquidar la salida de un vehículo estacionado.
- * Calcula en tiempo real el tiempo transcurrido y el valor a cancelar.
- * @param {string} placa Placa del vehículo a liquidar
+ * Limpia el campo de filtro y restablece la tabla.
  */
-function abrirModalLiquidacion(placa) {
-    const registros = getRegistros();
-    const vehiculo = registros.find(r => r.placa === placa && r.estado === 'ACTIVO');
+function limpiarFiltro() {
+    const input = document.getElementById('txtBuscar');
+    if (input) input.value = '';
+    renderizarTablaControl();
+}
 
-    if (!vehiculo) {
-        mostrarAlerta(`No se encontró un vehículo activo con la placa ${placa}.`, 'danger');
+/**
+ * Despliega el modal de liquidacion calculando el tiempo transcurrido y tarifa.
+ * @param {string} placa 
+ */
+function liquidarSalida(placa) {
+    const registros = getRegistros();
+    const r = registros.find(item => item.placa === placa && item.estado === 'ACTIVO');
+
+    if (!r) {
+        mostrarAlerta(`No se encontró vehículo activo con placa ${placa}.`, 'danger');
         return;
     }
 
-    vehiculoEnLiquidacion = vehiculo;
-    const horaActual = obtenerFechaHoraActual();
-    const liquidacion = calcularCobro(vehiculo.horaIngreso, horaActual, vehiculo.tipo);
-    liquidacionCalculada = { ...liquidacion, horaSalida: horaActual };
+    registroEnLiquidacion = r;
+    const horaSalida = obtenerFechaHoraActual();
+    
+    // Calcular tiempo
+    const inicio = new Date(r.horaIngreso.replace(' ', 'T'));
+    const fin = new Date(horaSalida.replace(' ', 'T'));
+    let diffMs = fin.getTime() - inicio.getTime();
+    if (diffMs < 0) diffMs = 0;
+    
+    const diffMinutos = Math.max(1, Math.round(diffMs / 60000));
+    const horasFacturadas = Math.max(1, Math.ceil(diffMinutos / 60));
+    const tarifa = Number(r.tarifaAplicada) || 3500;
+    const totalPagar = horasFacturadas * tarifa;
 
-    const contenedor = document.getElementById('detalleCobroContenido');
-    contenedor.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <span>Placa del Vehículo:</span>
-            <strong style="color:#fef08a; font-size:1.1rem; font-family:monospace;">${vehiculo.placa}</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <span>Tipo / Categoría:</span>
-            <strong>${vehiculo.tipo}</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <span>Propietario:</span>
-            <span>${vehiculo.propietario}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <span>Bahía Asignada:</span>
-            <span style="color:#38bdf8;">${vehiculo.bahia}</span>
-        </div>
+    calculoCobroActual = {
+        horaSalida: horaSalida,
+        minutos: diffMinutos,
+        horas: horasFacturadas,
+        total: totalPagar
+    };
+
+    const modalContenido = document.getElementById('contenidoModalSalida');
+    modalContenido.innerHTML = `
+        <div><strong>Placa:</strong> <span style="color:#60a5fa; font-size:1.1rem; font-weight:bold;">${r.placa}</span></div>
+        <div><strong>Tipo:</strong> ${r.tipo} | <strong>Bahía:</strong> ${r.observaciones || 'General'}</div>
+        <div><strong>Propietario:</strong> ${r.propietario}</div>
         <hr style="border:none; border-top:1px dashed #334155; margin:10px 0;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Hora de Ingreso:</span>
-            <span>${vehiculo.horaIngreso}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Hora de Salida:</span>
-            <span>${horaActual}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Tiempo Transcurrido:</span>
-            <strong>${liquidacion.duracionMinutos} min (${liquidacion.horasACobrar} hora(s) facturadas)</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-            <span>Tarifa Aplicada:</span>
-            <span>${formatearMoneda(liquidacion.tarifaHora)} / hora</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:12px; padding:10px; background:#1e293b; border-radius:6px; border:1px solid #10b981;">
-            <span style="font-size:1.1rem; font-weight:bold; color:#10b981;">TOTAL A COBRAR:</span>
-            <span style="font-size:1.3rem; font-weight:800; color:#ffffff;">${formatearMoneda(liquidacion.totalPagar)} COP</span>
+        <div><strong>Hora Entrada:</strong> ${r.horaIngreso}</div>
+        <div><strong>Hora Salida:</strong> ${horaSalida}</div>
+        <div><strong>Tiempo Transcurrido:</strong> ${diffMinutos} min (${horasFacturadas} hora(s) facturadas)</div>
+        <div><strong>Tarifa / Hora:</strong> $${tarifa.toLocaleString('es-CO')}</div>
+        <div style="margin-top:12px; padding:12px; background:#0f172a; border-radius:8px; border:1px solid #10b981; font-size:1.2rem; font-weight:bold; color:#10b981; text-align:center;">
+            TOTAL A COBRAR: $${totalPagar.toLocaleString('es-CO')} COP
         </div>
     `;
 
-    document.getElementById('modalLiquidacion').style.display = 'flex';
+    const modal = document.getElementById('modalSalida');
+    if (modal) modal.style.display = 'flex';
 }
 
 /**
  * Cierra la ventana modal de liquidación.
  */
-function cerrarModalLiquidacion() {
-    document.getElementById('modalLiquidacion').style.display = 'none';
-    vehiculoEnLiquidacion = null;
-    liquidacionCalculada = null;
+function cerrarModalSalida() {
+    const modal = document.getElementById('modalSalida');
+    if (modal) modal.style.display = 'none';
+    registroEnLiquidacion = null;
+    calculoCobroActual = null;
 }
 
 /**
- * Confirma el pago de la tarifa y registra la salida del vehículo en LocalStorage.
+ * Confirma el cobro de la salida, actualiza el registro en LocalStorage y emite el recibo.
  */
-function confirmarSalida() {
-    if (!vehiculoEnLiquidacion || !liquidacionCalculada) return;
+function confirmarCobroSalida() {
+    if (!registroEnLiquidacion || !calculoCobroActual) return;
 
     const registros = getRegistros();
-    const indice = registros.findIndex(r => r.id === vehiculoEnLiquidacion.id);
+    const idx = registros.findIndex(r => r.id === registroEnLiquidacion.id);
+    if (idx === -1) return;
 
-    if (indice === -1) return;
-
-    const metodoPago = document.getElementById('selMetodoPago').value;
-    const operador = getUsuarioSesion();
-
-    // Actualizar registro
-    registros[indice].horaSalida = liquidacionCalculada.horaSalida;
-    registros[indice].totalPagado = liquidacionCalculada.totalPagar;
-    registros[indice].estado = 'FINALIZADO';
-    registros[indice].metodoPago = metodoPago;
-    registros[indice].operadorSalida = `${operador.nombres} ${operador.apellidos}`;
+    registros[idx].horaSalida = calculoCobroActual.horaSalida;
+    registros[idx].totalPagado = calculoCobroActual.total;
+    registros[idx].estado = 'FINALIZADO';
 
     saveRegistros(registros);
-
-    // Crear recibo histórico
-    const recibos = getRecibos();
-    const numRecibo = `REC-${new Date().getFullYear()}-${String(recibos.length + 1).padStart(4, '0')}`;
-    const nuevoRecibo = {
-        numeroRecibo: numRecibo,
-        placa: vehiculoEnLiquidacion.placa,
-        tipo: vehiculoEnLiquidacion.tipo,
-        propietario: vehiculoEnLiquidacion.propietario,
-        bahia: vehiculoEnLiquidacion.bahia,
-        horaIngreso: vehiculoEnLiquidacion.horaIngreso,
-        horaSalida: liquidacionCalculada.horaSalida,
-        duracionMinutos: liquidacionCalculada.duracionMinutos,
-        duracionHoras: liquidacionCalculada.horasACobrar,
-        tarifaHora: liquidacionCalculada.tarifaHora,
-        totalPagado: liquidacionCalculada.totalPagar,
-        metodoPago: metodoPago,
-        operador: `${operador.nombres} ${operador.apellidos}`
-    };
-
-    recibos.unshift(nuevoRecibo);
-    saveRecibos(recibos);
-
-    cerrarModalLiquidacion();
+    cerrarModalSalida();
     renderizarTablaControl();
 
-    mostrarAlerta(`Salida del vehículo [${nuevoRecibo.placa}] registrada con éxito. Recaudo: ${formatearMoneda(nuevoRecibo.totalPagado)}.`, 'success');
-    mostrarTicketSalida(nuevoRecibo);
+    mostrarAlerta(`Salida de la placa [${registros[idx].placa}] registrada con éxito. Total cobrado: $${calculoCobroActual.total.toLocaleString('es-CO')}.`, 'success');
+    mostrarTicketTermicoSalida(registros[idx], calculoCobroActual);
 }
 
 /**
- * Genera y muestra el comprobante térmico de ingreso.
- * @param {Object} registro 
+ * Muestra el ticket térmico de entrada.
+ * @param {Object} r 
  */
-function mostrarTicketEntrada(registro) {
-    const contenedor = document.getElementById('ticketPrintContent');
+function mostrarTicketTermicoEntrada(r) {
+    const contenedor = document.getElementById('ticketContenido');
     contenedor.innerHTML = `
-        <div class="ticket-header">
-            <h3>PARK ONE</h3>
-            <div style="font-size:0.75rem;">SISTEMA DE GESTION DE PARQUEADEROS</div>
-            <div style="font-size:0.75rem;">NIT: 900.123.456-7 | SENA CAUCA</div>
-            <div style="font-size:0.72rem; color:#64748b;">Calle 3 # 1 s 27, Popayán</div>
-            <div style="font-weight:bold; margin-top:4px;">TICKET DE ENTRADA</div>
+        <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px;">
+            <h3 style="margin:0; font-size:1.2rem;">PARK ONE</h3>
+            <small>Framework Web & Móvil de Gestión de Parqueaderos</small><br>
+            <small>SENA Regional Cauca - Popayán</small><br>
+            <strong>TICKET DE ENTRADA</strong>
         </div>
-
-        <div class="ticket-row">
-            <span>Ticket N°:</span>
-            <strong>#ENT-${String(registro.id).padStart(5, '0')}</strong>
+        <div><strong>Ticket N°:</strong> #ENT-${r.id}</div>
+        <div><strong>Fecha/Hora:</strong> ${r.horaIngreso}</div>
+        <div><strong>Placa:</strong> <span style="font-size:1.2rem; font-weight:bold; border:1px solid #000; padding:1px 4px;">${r.placa}</span></div>
+        <div><strong>Tipo:</strong> ${r.tipo}</div>
+        <div><strong>Bahía:</strong> ${r.observaciones || 'General'}</div>
+        <div><strong>Conductor:</strong> ${r.propietario}</div>
+        <div><strong>Tarifa Base:</strong> $${Number(r.tarifaAplicada).toLocaleString('es-CO')}/h</div>
+        <div style="text-align:center; font-size:0.75rem; margin-top:10px; border-top:1px dashed #000; padding-top:6px;">
+            Conserve este comprobante para retirar su vehículo.<br>
+            ||||| ||| |||| || |||||
         </div>
-        <div class="ticket-row">
-            <span>Fecha y Hora:</span>
-            <span>${registro.horaIngreso}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Placa Vehicular:</span>
-            <strong style="font-size:1.1rem; border:1px solid #000; padding:1px 4px;">${registro.placa}</strong>
-        </div>
-        <div class="ticket-row">
-            <span>Tipo Vehículo:</span>
-            <span>${registro.tipo}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Bahía Asignada:</span>
-            <strong>${registro.bahia}</strong>
-        </div>
-        <div class="ticket-row">
-            <span>Conductor:</span>
-            <span>${registro.propietario}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Tarifa / Hora:</span>
-            <strong>${formatearMoneda(registro.tarifaAplicada)}</strong>
-        </div>
-        <div class="ticket-row">
-            <span>Atendido por:</span>
-            <span>${registro.operadorIngreso}</span>
-        </div>
-
-        <div style="text-align:center; margin-top:12px; font-size:0.72rem; border-top:1px dashed #64748b; padding-top:6px;">
-            Conserve este ticket para retirar su vehículo.<br>
-            No nos hacemos responsables por objetos de valor no declarados.
-        </div>
-        <div class="ticket-barcode">||| | |||| | ||| || |||</div>
     `;
 
-    document.getElementById('modalTicket').style.display = 'flex';
+    document.getElementById('ticketModal').style.display = 'block';
 }
 
 /**
- * Genera y muestra el recibo térmico de pago de salida.
- * @param {Object} recibo 
+ * Muestra el comprobante térmico de salida.
+ * @param {Object} r 
+ * @param {Object} cobro 
  */
-function mostrarTicketSalida(recibo) {
-    const contenedor = document.getElementById('ticketPrintContent');
+function mostrarTicketTermicoSalida(r, cobro) {
+    const contenedor = document.getElementById('ticketContenido');
     contenedor.innerHTML = `
-        <div class="ticket-header">
-            <h3>PARK ONE</h3>
-            <div style="font-size:0.75rem;">SISTEMA DE GESTION DE PARQUEADEROS</div>
-            <div style="font-size:0.75rem;">NIT: 900.123.456-7 | SENA CAUCA</div>
-            <div style="font-size:0.72rem; color:#64748b;">Calle 3 # 1 s 27, Popayán</div>
-            <div style="font-weight:bold; margin-top:4px;">COMPROBANTE DE PAGO</div>
+        <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px;">
+            <h3 style="margin:0; font-size:1.2rem;">PARK ONE</h3>
+            <small>Framework Web & Móvil de Gestión de Parqueaderos</small><br>
+            <small>SENA Regional Cauca - Popayán</small><br>
+            <strong>COMPROBANTE DE PAGO</strong>
         </div>
-
-        <div class="ticket-row">
-            <span>Factura N°:</span>
-            <strong>${recibo.numeroRecibo}</strong>
-        </div>
-        <div class="ticket-row">
-            <span>Placa:</span>
-            <strong style="font-size:1.1rem;">${recibo.placa}</strong>
-        </div>
-        <div class="ticket-row">
-            <span>Tipo:</span>
-            <span>${recibo.tipo}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Cliente:</span>
-            <span>${recibo.propietario}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Ingreso:</span>
-            <span>${recibo.horaIngreso}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Salida:</span>
-            <span>${recibo.horaSalida}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Tiempo Total:</span>
-            <strong>${recibo.duracionMinutos} min (${recibo.duracionHoras}h facturadas)</strong>
-        </div>
-        <div class="ticket-row">
-            <span>Método de Pago:</span>
-            <span>${recibo.metodoPago}</span>
-        </div>
-        <div class="ticket-row">
-            <span>Cajero:</span>
-            <span>${recibo.operador}</span>
-        </div>
-
-        <div class="ticket-total">
+        <div><strong>Factura N°:</strong> #FAC-${r.id}</div>
+        <div><strong>Placa:</strong> <span style="font-size:1.2rem; font-weight:bold;">${r.placa}</span></div>
+        <div><strong>Tipo:</strong> ${r.tipo}</div>
+        <div><strong>Conductor:</strong> ${r.propietario}</div>
+        <div><strong>Entrada:</strong> ${r.horaIngreso}</div>
+        <div><strong>Salida:</strong> ${r.horaSalida}</div>
+        <div><strong>Tiempo:</strong> ${cobro.minutos} min (${cobro.horas} hora(s))</div>
+        <div style="font-size:1.2rem; font-weight:bold; margin:8px 0; border-top:1px dashed #000; border-bottom:1px dashed #000; padding:6px 0; display:flex; justify-content:space-between;">
             <span>TOTAL PAGADO:</span>
-            <span>${formatearMoneda(recibo.totalPagado)}</span>
+            <span>$${cobro.total.toLocaleString('es-CO')}</span>
         </div>
-
-        <div style="text-align:center; font-size:0.72rem;">
+        <div style="text-align:center; font-size:0.75rem;">
             ¡Gracias por preferir a ParkOne!<br>
-            Régimen Simplificado - Popayán, Cauca.
+            |||| ||||| ||| |||| |||
         </div>
-        <div class="ticket-barcode">|||| | || |||| || | |||</div>
     `;
 
-    document.getElementById('modalTicket').style.display = 'flex';
+    document.getElementById('ticketModal').style.display = 'block';
 }
 
 /**
- * Cierra la ventana modal del ticket térmico.
- */
-function cerrarModalTicket() {
-    document.getElementById('modalTicket').style.display = 'none';
-}
-
-/**
- * Lanza la impresión del comprobante usando el diálogo nativo del navegador.
- */
-function imprimirTicket() {
-    window.print();
-}
-
-/**
- * Reimprime el ticket de entrada a partir de su ID.
+ * Reimprime el ticket de entrada.
  * @param {number} id 
  */
-function reimprimirTicketEntrada(id) {
+function reimprimirTicket(id) {
     const registros = getRegistros();
-    const item = registros.find(r => r.id === id);
-    if (item) {
-        mostrarTicketEntrada(item);
-    }
+    const r = registros.find(item => item.id === id);
+    if (r) mostrarTicketTermicoEntrada(r);
 }
 
 /**
- * Muestra el comprobante de un vehículo que ya finalizó su estancia.
- * @param {string} placa 
+ * Muestra el comprobante finalizado.
+ * @param {number} id 
  */
-function verComprobanteSalida(placa) {
-    const recibos = getRecibos();
-    const item = recibos.find(r => r.placa === placa);
-    if (item) {
-        mostrarTicketSalida(item);
-    } else {
-        mostrarAlerta(`No se encontró el comprobante para la placa ${placa}.`, 'danger');
+function reimprimirReciboFinalizado(id) {
+    const registros = getRegistros();
+    const r = registros.find(item => item.id === id);
+    if (r) {
+        mostrarTicketTermicoSalida(r, {
+            minutos: 60,
+            horas: 1,
+            total: r.totalPagado
+        });
     }
 }

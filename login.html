@@ -6,76 +6,57 @@
     <title>ParkOne Framework | Iniciar Sesión</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body style="display:flex; align-items:center; justify-content:center; min-height:100vh; background-color:#0f172a; padding:1.5rem;">
+<body style="display:flex; align-items:center; justify-content:center; min-height:100vh; background-color:#0f172a;">
 
-    <!-- Tarjeta central de autenticación -->
-    <div style="background:#1e293b; border:1px solid #334155; padding:2.5rem; border-radius:16px; width:100%; max-width:440px; box-shadow:0 15px 35px rgba(0,0,0,0.5);">
-        
-        <!-- Logo y cabecera institucional -->
-        <div style="text-align:center; margin-bottom:1.75rem;">
-            <img src="images/logo2.png" alt="Logo ParkOne" style="height:65px; margin-bottom:0.75rem; object-fit:contain;">
-            <h2 style="font-size:1.6rem; font-weight:800; color:#fff;">Park<span style="color:#39a900;">One</span></h2>
-            <p style="color:#94a3b8; font-size:0.85rem; margin-top:2px;">Framework Web & Móvil de Gestión de Parqueaderos</p>
-            <div style="margin-top:0.4rem; font-size:0.75rem; color:#64748b;">SENA Regional Cauca - ADSO Ficha: 3336118</div>
+    <div class="login-card" style="background:#1e293b; border:1px solid #334155; padding:2.5rem; border-radius:12px; width:100%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.3);">
+        <div style="text-align:center; margin-bottom:1.5rem;">
+            <div class="brand-icon" style="margin:0 auto 10px auto; width:50px; height:50px; font-size:1.4rem;">P1</div>
+            <h2 style="font-size:1.6rem; font-weight:700;">Park<span style="color:#39a900;">One</span></h2>
+            <p style="color:#94a3b8; font-size:0.85rem; margin-top:4px;">Sistema de Parqueaderos - Acceso Operativo</p>
         </div>
 
-        <!-- Alertas de login -->
         <div id="alertaLogin"></div>
 
-        <!-- Formulario de acceso -->
         <form onsubmit="iniciarSesion(event)">
-            <div class="form-group" style="margin-bottom:1.1rem;">
-                <label for="txtCedula" style="font-size:0.85rem; color:#94a3b8;">Número de Cédula *</label>
-                <input type="text" id="txtCedula" value="1061723849" required 
-                       placeholder="Ingrese su número de cédula"
-                       style="width:100%; padding:0.75rem; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:0.95rem;">
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label style="color:#94a3b8; font-size:0.85rem; display:block; margin-bottom:4px;">Número de Cédula *</label>
+                <input type="text" id="txtCedula" value="1061723849" required style="width:100%; padding:0.75rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
             </div>
 
             <div class="form-group" style="margin-bottom:1.5rem;">
-                <label for="txtClave" style="font-size:0.85rem; color:#94a3b8;">Contraseña de Acceso *</label>
-                <input type="password" id="txtClave" value="123456" required 
-                       placeholder="Ingrese su contraseña"
-                       style="width:100%; padding:0.75rem; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:0.95rem;">
+                <label style="color:#94a3b8; font-size:0.85rem; display:block; margin-bottom:4px;">Contraseña *</label>
+                <input type="password" id="txtClave" value="123456" required style="width:100%; padding:0.75rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
             </div>
 
-            <button type="submit" class="btn btn-success" style="width:100%; padding:0.85rem; font-size:1rem; font-weight:700;">
-                🔐 Ingresar al Sistema
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem; font-weight:bold; font-size:1rem;">
+                Ingresar al Sistema
             </button>
         </form>
 
-        <!-- Bloque de ayuda para el evaluador / instructor -->
-        <div style="margin-top:1.75rem; padding-top:1.25rem; border-top:1px solid #334155; font-size:0.82rem; color:#94a3b8; text-align:center; line-height:1.6;">
-            <strong style="color:#fef08a;">Credenciales de Prueba (Mock):</strong><br>
-            Cédula: <strong style="color:#fff;">1061723849</strong> | Contraseña: <strong style="color:#fff;">123456</strong><br>
-            <span style="color:#64748b; font-size:0.75rem;">(Corresponde al Administrador Brandon Yair Galvis Díaz)</span>
+        <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid #334155; text-align:center; font-size:0.8rem; color:#64748b;">
+            Credenciales de prueba:<br>
+            Cédula: <strong>1061723849</strong> | Clave: <strong>123456</strong>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="js/data.js"></script>
-
     <script>
-        /**
-         * Valida las credenciales contra la base de datos de usuarios en LocalStorage.
-         */
         function iniciarSesion(e) {
             e.preventDefault();
             const cedula = document.getElementById('txtCedula').value.trim();
             const clave = document.getElementById('txtClave').value.trim();
 
             const usuarios = getUsuarios();
-            const usuarioEncontrado = usuarios.find(u => u.identificacion === cedula);
+            const encontrado = usuarios.find(u => u.identificacion === cedula);
 
-            // Validar existencia de usuario y contraseña estándar para demo
-            if (usuarioEncontrado && (clave === '123456' || clave === 'admin')) {
-                localStorage.setItem(STORAGE_AUTH, JSON.stringify(usuarioEncontrado));
-                window.location.href = 'index.html';
+            if (encontrado && clave === "123456") {
+                localStorage.setItem(STORAGE_AUTH, JSON.stringify(encontrado));
+                window.location.href = "index.html";
             } else {
                 const box = document.getElementById('alertaLogin');
                 box.innerHTML = `
-                    <div class="alert alert-danger" style="margin-bottom:1rem; font-size:0.85rem;">
-                        <span>⚠</span>
-                        <div>Cédula o contraseña incorrecta. Verifique sus credenciales.</div>
+                    <div style="padding:10px; margin-bottom:1rem; border-radius:6px; background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#fff; font-size:0.85rem; text-align:center;">
+                        ⚠ Cédula o contraseña incorrecta.
                     </div>
                 `;
             }

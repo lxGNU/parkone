@@ -11,3 +11,4 @@ start "" "%~dp0index.html"
 echo.
 echo Aplicacion iniciada correctamente. Puede cerrar esta ventana.
 pause
+

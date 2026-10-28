@@ -1,37 +1,28 @@
-================================================================================
-SERVICIO NACIONAL DE APRENDIZAJE - SENA
-TECNOLOGO EN ANALISIS Y DESARROLLO DE SOFTWARE (ADSO) - FICHA: 3336118
-EVIDENCIA GA7-220501096-AA4-EV03: COMPONENTE FRONT-END DEL PROYECTO FORMATIVO
-APRENDIZ: BRANDON YAIR GALVIS DIAZ
-SENA REGIONAL CAUCA - 2026
-================================================================================
+ENLACE DEL REPOSITORIO Y COMPONENTE FRONT-END - EVIDENCIA GA7-220501096-AA4-EV03
 
-1. ENLACE DEL REPOSITORIO EN GITHUB:
-   https://github.com/lxGNU/parkone
+Enlace del Repositorio en GitHub:
+https://github.com/lxGNU/parkone
 
-2. RAMA (BRANCH) DE LA EVIDENCIA FRONT-END:
-   https://github.com/lxGNU/parkone/tree/feature/front-end-react
+Rama (Branch) de esta evidencia:
+https://github.com/lxGNU/parkone/tree/feature/front-end-react
 
-3. COMMIT PRINCIPAL DEL MODULO FRONT-END:
-   feat(frontend): implementacion completa del componente frontend interactivo ParkOne
+Instrucciones para ejecutar el componente Front-End:
 
-4. CREDENCIALES DE ACCESO DE PRUEBA (MOCK DATA):
-   - Usuario / Cedula: 1061723849
-   - Contrasena:       123456
-   - Rol Asignado:     Administrador del Sistema (Brandon Yair Galvis Diaz)
+1. Ejecucion Rapida:
+   - Dar doble clic en el archivo "iniciar.bat" o abrir directamente "index.html" en cualquier navegador web.
+   - La aplicacion cargara inmediatamente con todos los datos y funciones activas.
 
-5. INSTRUCCIONES DE EJECUCION RAPIDA:
-   a) Doble clic sobre el archivo ejecutable "iniciar.bat" en Windows.
-   b) O abrir directamente el archivo "index.html" en cualquier navegador (Google Chrome, Edge, Firefox).
-   c) Todos los datos y operaciones persisten localmente en el navegador mediante LocalStorage.
+2. Credenciales de acceso de prueba:
+   - Cedula: 1061723849
+   - Clave:  123456
 
-6. MODULOS FRONT-END DESARROLLADOS Y VERIFICADOS:
-   - Panel Principal / Dashboard (index.html): Indicadores KPI cuantitativos y accesos directos.
-   - Control de Parqueadero (control.html): Entradas, salidas, validacion de duplicidad y cobro.
-   - Gestion de Vehiculos y Tarifas (vehiculos.html): Catalogo y simulador de cobro interactivo.
-   - Gestion de Usuarios y Colaboradores (usuarios.html): Altas, bajas, roles y persistencia.
-   - Consultas y Auditoria (consultas.html): Filtros por placa, categoria y estado operativo.
-   - Recibos y Comprobantes (recibos.html): Repositorio termico con impresion nativa.
-   - Autenticacion / Login (login.html): Control de acceso por credenciales.
+3. Modulos incluidos en la entrega:
+   - Panel Principal / Dashboard (index.html): Estadisticas en vivo: Capacidad (50), Ocupados, Libres y Recaudo acumulado.
+   - Control Parqueadero (control.html): Registro de entrada con placa y tipo de vehiculo, comprobante/ticket de cobro y liquidacion de salidas.
+   - Gestion Vehiculos (vehiculos.html): Catalogo de tarifas vigentes y vehiculos registrados.
+   - Gestion Usuarios (usuarios.html): Administracion de colaboradores con roles de Administrador y Operador.
+   - Inicio de Sesion (login.html): Autenticacion con control de acceso.
 
-================================================================================
+Aprendiz: Brandon Yair Galvis Diaz
+Ficha: 3336118 - Tecnologo en Analisis y Desarrollo de Software (ADSO)
+SENA Regional Cauca - 2026
