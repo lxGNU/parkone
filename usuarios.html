@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkOne Framework | Gestión de Usuarios</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header institucional ParkOne -->
+    <header>
+        <a href="index.html" class="brand-container">
+            <img src="images/logo2.png" alt="Logo ParkOne" class="brand-logo-img">
+            <div class="brand-info">
+                <h1>Park<span>One</span></h1>
+                <small>Framework Web & Móvil de Gestión de Parqueaderos</small>
+            </div>
+        </a>
+
+        <!-- Información de sesión activa del operador -->
+        <div class="sub-header-info" id="userInfoBox"></div>
+    </header>
+
+    <!-- Menú de navegación principal -->
+    <nav id="menu-h">
+        <ul>
+            <li><a href="index.html">🏠 Panel Principal</a></li>
+            <li><a href="control.html">🚗 Control Parqueadero</a></li>
+            <li><a href="vehiculos.html">📋 Tarifas y Vehículos</a></li>
+            <li><a href="usuarios.html" class="active">👥 Gestión Usuarios</a></li>
+            <li><a href="consultas.html">🔍 Consultas y Reportes</a></li>
+            <li><a href="recibos.html">🧾 Recibos de Pago</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="contenedor-principal">
+        <div class="titulo-pagina">
+            <div>
+                <h2>Gestión de Usuarios y Colaboradores</h2>
+                <p>Administración de personal operativo, credenciales de acceso y asignación de roles</p>
+            </div>
+            <div>
+                <button onclick="toggleFormUsuario()" class="btn btn-success" id="btnToggleUser">
+                    + Registrar Nuevo Colaborador
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de alertas del módulo -->
+        <div id="alertaBox"></div>
+
+        <!-- ==================================================================
+             FORMULARIO DE REGISTRO DE USUARIOS (INTEGRACIÓN ARTEFACTO GA6)
+             ================================================================== -->
+        <div id="panelFormUsuario" style="display:none; background:#1e293b; padding:2rem; border-radius:12px; border:1px solid #334155; margin-bottom:2rem; box-shadow:0 8px 25px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid #334155; padding-bottom:0.75rem;">
+                <h3 style="color:#39a900; font-size:1.3rem;">👤 Registrar Nuevo Colaborador en ParkOne</h3>
+                <button type="button" onclick="toggleFormUsuario()" class="btn btn-secondary btn-sm">Cerrar [X]</button>
+            </div>
+
+            <div style="display:flex; gap:2.5rem; flex-wrap:wrap; align-items:flex-start;">
+                <!-- Foto de usuario institucional -->
+                <div style="text-align:center; min-width:200px; margin:0 auto;">
+                    <img src="images/user.jpg" alt="Foto Colaborador" 
+                         style="width:160px; height:160px; border-radius:50%; border:4px solid #39a900; object-fit:cover; background:#0f172a; box-shadow:0 6px 15px rgba(0,0,0,0.4);">
+                    <div style="margin-top:0.75rem; color:#94a3b8; font-size:0.8rem;">Foto de Perfil</div>
+                </div>
+
+                <!-- Campos del formulario -->
+                <form id="formUsuario" onsubmit="procesarGuardarUsuario(event)" style="flex:1; min-width:300px;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="txtNombres">Nombres *</label>
+                            <input type="text" id="txtNombres" placeholder="Ingrese los nombres" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="txtApellidos">Apellidos *</label>
+                            <input type="text" id="txtApellidos" placeholder="Ingrese los apellidos" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="txtCedula">Número de Cédula *</label>
+                            <input type="text" id="txtCedula" placeholder="Ej: 1061723849" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="txtCargo">Cargo Institucional *</label>
+                            <input type="text" id="txtCargo" placeholder="Ej: Operador de Taquilla" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selRol">Rol en el Sistema *</label>
+                            <select id="selRol" required>
+                                <option value="Operador">Operador de Taquilla</option>
+                                <option value="Administrador">Administrador del Sistema</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="txtCorreo">Correo Electrónico *</label>
+                            <input type="email" id="txtCorreo" placeholder="colaborador@parkone.co" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="txtTelefono">Teléfono de Contacto *</label>
+                            <input type="tel" id="txtTelefono" placeholder="Ej: 3234565445" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="txtDireccion">Dirección de Residencia</label>
+                            <input type="text" id="txtDireccion" placeholder="Popayán, Cauca">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.25rem;">
+                        <button type="button" onclick="toggleFormUsuario()" class="btn btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn btn-success">💾 Guardar Colaborador</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             LISTADO Y FILTRO DE COLABORADORES REGISTRADOS
+             ================================================================== -->
+        <div class="card-container">
+            <div class="card-header">
+                <div>
+                    <h3>Colaboradores Registrados en el Sistema</h3>
+                    <p style="color:#94a3b8; font-size:0.85rem; margin-top:2px;">Personal autorizado para operar y gestionar la plataforma</p>
+                </div>
+                <div style="min-width:280px;">
+                    <input type="text" id="txtBuscarUsuario" placeholder="Buscar por cédula, nombre o cargo..." 
+                           onkeyup="filtrarUsuarios()" 
+                           style="width:100%; padding:0.6rem 1rem; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cédula</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Cargo</th>
+                            <th>Rol</th>
+                            <th>Correo Electrónico</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaUsuariosBody">
+                        <!-- Generado dinámicamente con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer institucional -->
+    <footer>
+        <div><strong>SENA - Servicio Nacional de Aprendizaje</strong> | Regional Cauca - Centro de Teleinformática y Producción Industrial</div>
+        <div>Programa: <strong>Tecnólogo en Análisis y Desarrollo de Software (ADSO)</strong> | Ficha: <strong>3336118</strong></div>
+        <div style="margin-top:0.4rem; color:#64748b;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/usuarios.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeaderUser('userInfoBox');
+        });
+    </script>
+</body>
+</html>

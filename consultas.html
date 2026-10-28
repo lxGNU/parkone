@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkOne Framework | Consultas y Reportes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header institucional ParkOne -->
+    <header>
+        <a href="index.html" class="brand-container">
+            <img src="images/logo2.png" alt="Logo ParkOne" class="brand-logo-img">
+            <div class="brand-info">
+                <h1>Park<span>One</span></h1>
+                <small>Framework Web & Móvil de Gestión de Parqueaderos</small>
+            </div>
+        </a>
+
+        <!-- Información de sesión activa del operador -->
+        <div class="sub-header-info" id="userInfoBox"></div>
+    </header>
+
+    <!-- Menú de navegación principal -->
+    <nav id="menu-h">
+        <ul>
+            <li><a href="index.html">🏠 Panel Principal</a></li>
+            <li><a href="control.html">🚗 Control Parqueadero</a></li>
+            <li><a href="vehiculos.html">📋 Tarifas y Vehículos</a></li>
+            <li><a href="usuarios.html">👥 Gestión Usuarios</a></li>
+            <li><a href="consultas.html" class="active">🔍 Consultas y Reportes</a></li>
+            <li><a href="recibos.html">🧾 Recibos de Pago</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="contenedor-principal">
+        <div class="titulo-pagina">
+            <div>
+                <h2>Módulo de Consultas y Reportes Operativos</h2>
+                <p>Auditoría de movimientos, métricas analíticas de patio y trazabilidad de ingresos</p>
+            </div>
+            <div>
+                <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨 Imprimir Reporte</button>
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             MÉTRICAS ANALÍTICAS RESUMIDAS
+             ================================================================== -->
+        <div class="dashboard-grid">
+            <div class="stat-card blue">
+                <div class="stat-title">Movimientos Totales</div>
+                <div class="stat-value" id="kpiMovimientos">0</div>
+                <div class="stat-desc">Registros históricos acumulados</div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-title">Recaudo Liquidado</div>
+                <div class="stat-value" id="kpiRecaudo">$0</div>
+                <div class="stat-desc">Total cancelado en caja</div>
+            </div>
+
+            <div class="stat-card yellow">
+                <div class="stat-title">Actualmente en Patio</div>
+                <div class="stat-value" id="kpiActivos">0</div>
+                <div class="stat-desc">Vehículos pendientes por salir</div>
+            </div>
+
+            <div class="stat-card purple">
+                <div class="stat-title">Ticket Promedio</div>
+                <div class="stat-value" id="kpiPromedio">$0</div>
+                <div class="stat-desc">Valor medio por vehículo finalizado</div>
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             FILTROS DE AUDITORÍA Y BÚSQUEDA AVANZADA
+             ================================================================== -->
+        <div class="card-container">
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem;">
+                <!-- Filtro por texto libre -->
+                <div style="flex:2; min-width:240px;">
+                    <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:4px;">Buscar por placa o conductor:</label>
+                    <input type="text" id="filtroTexto" placeholder="Escriba la placa o nombre..." 
+                           onkeyup="aplicarFiltrosReporte()" 
+                           style="width:100%; padding:0.6rem 1rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
+                </div>
+
+                <!-- Filtro por tipo de vehículo -->
+                <div style="flex:1; min-width:180px;">
+                    <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:4px;">Categoría Vehicular:</label>
+                    <select id="filtroTipo" onchange="aplicarFiltrosReporte()" 
+                            style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
+                        <option value="TODOS">Todas las categorías</option>
+                        <option value="Carro">Automóvil / Carro</option>
+                        <option value="Moto">Motocicleta</option>
+                        <option value="Camioneta">Camioneta / SUV</option>
+                        <option value="Bicicleta">Bicicleta</option>
+                    </select>
+                </div>
+
+                <!-- Filtro por estado operativo -->
+                <div style="flex:1; min-width:180px;">
+                    <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:4px;">Estado Operativo:</label>
+                    <select id="filtroEstado" onchange="aplicarFiltrosReporte()" 
+                            style="width:100%; padding:0.6rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
+                        <option value="TODOS">Todos los estados</option>
+                        <option value="ACTIVO">En Patio (Activos)</option>
+                        <option value="FINALIZADO">Salidos (Liquidados)</option>
+                    </select>
+                </div>
+
+                <div style="padding-top:1.25rem;">
+                    <button onclick="limpiarFiltros()" class="btn btn-secondary btn-sm">Limpiar Filtros</button>
+                </div>
+            </div>
+
+            <!-- Tabla de resultados de auditoría -->
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>N° Reg</th>
+                            <th>Placa</th>
+                            <th>Tipo</th>
+                            <th>Propietario / Conductor</th>
+                            <th>Bahía</th>
+                            <th>Hora Ingreso</th>
+                            <th>Hora Salida</th>
+                            <th>Total Liquidado</th>
+                            <th>Estado</th>
+                            <th>Operador Turno</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaReportesBody">
+                        <!-- Filas inyectadas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer institucional -->
+    <footer>
+        <div><strong>SENA - Servicio Nacional de Aprendizaje</strong> | Regional Cauca - Centro de Teleinformática y Producción Industrial</div>
+        <div>Programa: <strong>Tecnólogo en Análisis y Desarrollo de Software (ADSO)</strong> | Ficha: <strong>3336118</strong></div>
+        <div style="margin-top:0.4rem; color:#64748b;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeaderUser('userInfoBox');
+            aplicarFiltrosReporte();
+        });
+
+        /**
+         * Aplica los filtros seleccionados por el usuario y renderiza la tabla de auditoría.
+         */
+        function aplicarFiltrosReporte() {
+            const registros = getRegistros();
+            const txt = (document.getElementById('filtroTexto')?.value || '').trim().toUpperCase();
+            const tipo = document.getElementById('filtroTipo')?.value || 'TODOS';
+            const estado = document.getElementById('filtroEstado')?.value || 'TODOS';
+
+            let filtrados = registros;
+
+            if (txt) {
+                filtrados = filtrados.filter(r => 
+                    r.placa.toUpperCase().includes(txt) ||
+                    r.propietario.toUpperCase().includes(txt) ||
+                    r.bahia.toUpperCase().includes(txt)
+                );
+            }
+
+            if (tipo !== 'TODOS') {
+                filtrados = filtrados.filter(r => r.tipo === tipo);
+            }
+
+            if (estado !== 'TODOS') {
+                filtrados = filtrados.filter(r => r.estado === estado);
+            }
+
+            // Actualizar tarjetas de resumen
+            const totalMov = filtrados.length;
+            const activos = filtrados.filter(r => r.estado === 'ACTIVO').length;
+            const finalizados = filtrados.filter(r => r.estado === 'FINALIZADO');
+            const totalRecaudo = finalizados.reduce((acc, r) => acc + (Number(r.totalPagado) || 0), 0);
+            const ticketPromedio = finalizados.length > 0 ? Math.round(totalRecaudo / finalizados.length) : 0;
+
+            document.getElementById('kpiMovimientos').textContent = totalMov;
+            document.getElementById('kpiRecaudo').textContent = formatearMoneda(totalRecaudo);
+            document.getElementById('kpiActivos').textContent = activos;
+            document.getElementById('kpiPromedio').textContent = formatearMoneda(ticketPromedio);
+
+            // Renderizar filas de la tabla
+            const tbody = document.getElementById('tablaReportesBody');
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align:center; padding:25px; color:#94a3b8;">
+                            No se encontraron registros de auditoría con los criterios seleccionados.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtrados.map(r => `
+                <tr>
+                    <td><strong>#${r.id}</strong></td>
+                    <td><span class="placa-badge">${r.placa}</span></td>
+                    <td><strong>${r.tipo}</strong></td>
+                    <td>${r.propietario}</td>
+                    <td><span style="color:#38bdf8; font-weight:600;">${r.bahia}</span></td>
+                    <td>${r.horaIngreso}</td>
+                    <td>${r.horaSalida || '<em style="color:#64748b;">En patio</em>'}</td>
+                    <td><strong>${r.totalPagado > 0 ? formatearMoneda(r.totalPagado) : '$0'}</strong></td>
+                    <td>
+                        <span class="badge ${r.estado === 'ACTIVO' ? 'badge-success' : 'badge-secondary'}">
+                            ${r.estado === 'ACTIVO' ? 'En Patio' : 'Finalizado'}
+                        </span>
+                    </td>
+                    <td><span style="color:#94a3b8; font-size:0.85rem;">${r.operadorIngreso || 'Operador'}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * Limpia los campos de filtro y restablece los valores por defecto.
+         */
+        function limpiarFiltros() {
+            document.getElementById('filtroTexto').value = '';
+            document.getElementById('filtroTipo').value = 'TODOS';
+            document.getElementById('filtroEstado').value = 'TODOS';
+            aplicarFiltrosReporte();
+        }
+    </script>
+</body>
+</html>

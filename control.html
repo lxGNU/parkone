@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkOne Framework | Control de Parqueadero</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header institucional ParkOne -->
+    <header>
+        <a href="index.html" class="brand-container">
+            <img src="images/logo2.png" alt="Logo ParkOne" class="brand-logo-img">
+            <div class="brand-info">
+                <h1>Park<span>One</span></h1>
+                <small>Framework Web & Móvil de Gestión de Parqueaderos</small>
+            </div>
+        </a>
+
+        <!-- Información de sesión activa del operador -->
+        <div class="sub-header-info" id="userInfoBox"></div>
+    </header>
+
+    <!-- Menú de navegación principal -->
+    <nav id="menu-h">
+        <ul>
+            <li><a href="index.html">🏠 Panel Principal</a></li>
+            <li><a href="control.html" class="active">🚗 Control Parqueadero</a></li>
+            <li><a href="vehiculos.html">📋 Tarifas y Vehículos</a></li>
+            <li><a href="usuarios.html">👥 Gestión Usuarios</a></li>
+            <li><a href="consultas.html">🔍 Consultas y Reportes</a></li>
+            <li><a href="recibos.html">🧾 Recibos de Pago</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="contenedor-principal">
+        <div class="titulo-pagina">
+            <div>
+                <h2>Control de Entradas, Salidas y Taquilla</h2>
+                <p>Registro operativo en tiempo real, liquidación de tarifas y emisión de tickets térmicos</p>
+            </div>
+            <div>
+                <button onclick="toggleFormIngreso()" class="btn btn-success" id="btnToggleIngreso">
+                    + Registrar Nuevo Ingreso
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de notificaciones y alertas en pantalla -->
+        <div id="alertaBox"></div>
+
+        <!-- ==================================================================
+             FORMULARIO COLAPSABLE DE REGISTRO DE ENTRADA
+             ================================================================== -->
+        <div id="panelNuevoIngreso" style="display:none; background:#1e293b; padding:1.75rem; border-radius:12px; border:1px solid #334155; margin-bottom:2rem; box-shadow:0 8px 25px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <h3 style="color:#39a900; font-size:1.25rem;">📝 Registrar Entrada de Vehículo a Patio</h3>
+                <button type="button" onclick="toggleFormIngreso()" class="btn btn-secondary btn-sm">Cerrar [X]</button>
+            </div>
+
+            <form id="formIngreso" onsubmit="procesarIngreso(event)">
+                <div class="form-grid">
+                    <!-- Placa vehicular -->
+                    <div class="form-group">
+                        <label for="inPlaca">Placa del Vehículo *</label>
+                        <input type="text" id="inPlaca" placeholder="Ej: ABC123" required 
+                               maxlength="8" style="text-transform:uppercase; font-weight:bold; letter-spacing:1px;"
+                               oninput="this.value = this.value.toUpperCase()">
+                    </div>
+
+                    <!-- Tipo de vehículo -->
+                    <div class="form-group">
+                        <label for="inTipo">Tipo de Vehículo *</label>
+                        <select id="inTipo" required onchange="actualizarInfoTarifa()">
+                            <option value="Carro">Automóvil / Carro ($3.500/h)</option>
+                            <option value="Moto">Motocicleta ($2.000/h)</option>
+                            <option value="Camioneta">Camioneta / SUV ($4.500/h)</option>
+                            <option value="Bicicleta">Bicicleta ($1.000/h)</option>
+                        </select>
+                    </div>
+
+                    <!-- Nombre del propietario o conductor -->
+                    <div class="form-group">
+                        <label for="inPropietario">Nombre del Propietario / Conductor *</label>
+                        <input type="text" id="inPropietario" placeholder="Ej: Carlos Mario Gómez" required>
+                    </div>
+
+                    <!-- Bahía o celda asignada -->
+                    <div class="form-group">
+                        <label for="inBahia">Bahía Asignada *</label>
+                        <input type="text" id="inBahia" placeholder="Ej: Bahía A-05" required>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1rem;">
+                    <button type="button" onclick="toggleFormIngreso()" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" class="btn btn-success">✅ Generar Ticket e Ingresar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ==================================================================
+             BARRA DE HERRAMIENTAS Y FILTROS DE BUSQUEDA
+             ================================================================== -->
+        <div class="card-container">
+            <div class="card-header">
+                <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; width:100%; justify-content:space-between;">
+                    <!-- Buscador en tiempo real -->
+                    <div style="display:flex; gap:0.5rem; flex:1; min-width:280px; max-width:480px;">
+                        <input type="text" id="txtBuscar" placeholder="Buscar por placa o nombre de conductor..." 
+                               onkeyup="filtrarTabla()" 
+                               style="width:100%; padding:0.65rem 1rem; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
+                    </div>
+
+                    <!-- Pestañas de estado: Activos vs Historial -->
+                    <div style="display:flex; gap:0.5rem;">
+                        <button onclick="cambiarPestana('ACTIVO')" class="btn btn-primary btn-sm" id="tabActivos">
+                            En Patio (Activos)
+                        </button>
+                        <button onclick="cambiarPestana('FINALIZADO')" class="btn btn-secondary btn-sm" id="tabSalidas">
+                            Historial Salidas
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de datos -->
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Placa</th>
+                            <th>Tipo</th>
+                            <th>Propietario</th>
+                            <th>Bahía</th>
+                            <th>Hora Ingreso</th>
+                            <th>Hora Salida</th>
+                            <th>Total Pagado</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaControlBody">
+                        <!-- Filas inyectadas con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ======================================================================
+         MODAL 1: TICKET TERMICO DE ENTRADA / SALIDA (PRINT FRIENDLY)
+         ====================================================================== -->
+    <div class="modal-overlay" id="modalTicket">
+        <div class="modal-content" style="max-width:420px; background:#fff; color:#000;">
+            <div id="ticketPrintContent" class="ticket-box" style="margin:0 auto; box-shadow:none; border:none; padding:10px;">
+                <!-- Contenido dinámico del ticket -->
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:1.25rem; padding-top:0.75rem; border-top:1px dashed #cbd5e1;">
+                <button type="button" onclick="imprimirTicket()" class="btn btn-primary btn-sm">🖨 Imprimir Ticket</button>
+                <button type="button" onclick="cerrarModalTicket()" class="btn btn-secondary btn-sm">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 2: LIQUIDACION Y COBRO DE SALIDA
+         ====================================================================== -->
+    <div class="modal-overlay" id="modalLiquidacion">
+        <div class="modal-content">
+            <h3 style="color:#38bdf8; margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">
+                🚗 Liquidación y Cobro de Salida
+            </h3>
+            
+            <div id="detalleCobroContenido" style="font-size:0.92rem; line-height:1.8; margin-bottom:1.5rem; background:#0f172a; padding:1.25rem; border-radius:8px; border:1px solid #334155;">
+                <!-- Se llena con JavaScript -->
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem;">
+                <label for="selMetodoPago">Método de Pago *</label>
+                <select id="selMetodoPago">
+                    <option value="Efectivo">Efectivo en Caja</option>
+                    <option value="Tarjeta">Tarjeta Débito / Crédito</option>
+                    <option value="Transferencia">Transferencia Bancaria (Nequi / Daviplata)</option>
+                </select>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                <button type="button" onclick="cerrarModalLiquidacion()" class="btn btn-secondary">Cancelar</button>
+                <button type="button" onclick="confirmarSalida()" class="btn btn-success" id="btnConfirmarSalida">
+                    💵 Confirmar Pago y Expedir Recibo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer institucional -->
+    <footer>
+        <div><strong>SENA - Servicio Nacional de Aprendizaje</strong> | Regional Cauca - Centro de Teleinformática y Producción Industrial</div>
+        <div>Programa: <strong>Tecnólogo en Análisis y Desarrollo de Software (ADSO)</strong> | Ficha: <strong>3336118</strong></div>
+        <div style="margin-top:0.4rem; color:#64748b;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
+    </footer>
+
+    <!-- Dependencias de scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/inventario.js"></script>
+
+    <script>
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeaderUser('userInfoBox');
+            
+            // Verificar si viene una placa para liquidar de inmediato por query param (?liquidar=PLACA)
+            const params = new URLSearchParams(window.location.search);
+            const placaLiquidar = params.get('liquidar');
+            if (placaLiquidar) {
+                abrirModalLiquidacion(placaLiquidar);
+            }
+        });
+    </script>
+</body>
+</html>

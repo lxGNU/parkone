@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkOne Framework | Tarifas y Vehículos</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header institucional ParkOne -->
+    <header>
+        <a href="index.html" class="brand-container">
+            <img src="images/logo2.png" alt="Logo ParkOne" class="brand-logo-img">
+            <div class="brand-info">
+                <h1>Park<span>One</span></h1>
+                <small>Framework Web & Móvil de Gestión de Parqueaderos</small>
+            </div>
+        </a>
+
+        <!-- Información de sesión activa del operador -->
+        <div class="sub-header-info" id="userInfoBox"></div>
+    </header>
+
+    <!-- Menú de navegación principal -->
+    <nav id="menu-h">
+        <ul>
+            <li><a href="index.html">🏠 Panel Principal</a></li>
+            <li><a href="control.html">🚗 Control Parqueadero</a></li>
+            <li><a href="vehiculos.html" class="active">📋 Tarifas y Vehículos</a></li>
+            <li><a href="usuarios.html">👥 Gestión Usuarios</a></li>
+            <li><a href="consultas.html">🔍 Consultas y Reportes</a></li>
+            <li><a href="recibos.html">🧾 Recibos de Pago</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="contenedor-principal">
+        <div class="titulo-pagina">
+            <div>
+                <h2>Catálogo de Tarifas y Categorías Vehiculares</h2>
+                <p>Estructura tarifaria por hora o fracción y simulador de cobro interactivo</p>
+            </div>
+            <div>
+                <a href="control.html" class="btn btn-primary">+ Ir a Control de Patio</a>
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             SECCIÓN 1: TARJETAS DE TARIFAS VIGENTES POR CATEGORÍA
+             ================================================================== -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem; margin-bottom:2rem;">
+            
+            <div class="stat-card blue" style="text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:0.25rem;">🚗</div>
+                <div class="stat-title">Automóvil / Carro</div>
+                <div class="stat-value" style="color:#60a5fa;" id="tarifaCarro">$3.500</div>
+                <div class="stat-desc">COP por hora o fracción</div>
+                <div style="margin-top:0.75rem; font-size:0.8rem; color:#94a3b8;">Incluye póliza de parqueadero</div>
+            </div>
+
+            <div class="stat-card yellow" style="text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:0.25rem;">🏍</div>
+                <div class="stat-title">Motocicleta</div>
+                <div class="stat-value" style="color:#fbbf24;" id="tarifaMoto">$2.000</div>
+                <div class="stat-desc">COP por hora o fracción</div>
+                <div style="margin-top:0.75rem; font-size:0.8rem; color:#94a3b8;">Espacio con guardacascos</div>
+            </div>
+
+            <div class="stat-card purple" style="text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:0.25rem;">🚙</div>
+                <div class="stat-title">Camioneta / SUV</div>
+                <div class="stat-value" style="color:#c084fc;" id="tarifaCamioneta">$4.500</div>
+                <div class="stat-desc">COP por hora o fracción</div>
+                <div style="margin-top:0.75rem; font-size:0.8rem; color:#94a3b8;">Celdas de mayor dimensión</div>
+            </div>
+
+            <div class="stat-card green" style="text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:0.25rem;">🚲</div>
+                <div class="stat-title">Bicicleta</div>
+                <div class="stat-value" style="color:#34d399;" id="tarifaBici">$1.000</div>
+                <div class="stat-desc">COP por hora o fracción</div>
+                <div style="margin-top:0.75rem; font-size:0.8rem; color:#94a3b8;">Zona exclusiva de biciparqueo</div>
+            </div>
+
+        </div>
+
+        <!-- ==================================================================
+             SECCIÓN 2: SIMULADOR DE COBRO INTERACTIVO
+             ================================================================== -->
+        <div class="card-container" style="background:#1e293b; border-left:4px solid var(--sena-green);">
+            <div class="card-header">
+                <div>
+                    <h3 style="color:#39a900;">🧮 Simulador de Liquidación de Tarifa</h3>
+                    <p style="color:#94a3b8; font-size:0.85rem;">Calcule el costo estimado de estancia para cualquier tipo de vehículo</p>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:1.5rem; flex-wrap:wrap; align-items:flex-end;">
+                <div class="form-group" style="flex:1; min-width:200px;">
+                    <label for="simTipo">Tipo de Vehículo</label>
+                    <select id="simTipo" onchange="calcularSimulacion()">
+                        <option value="Carro">Automóvil / Carro ($3.500/h)</option>
+                        <option value="Moto">Motocicleta ($2.000/h)</option>
+                        <option value="Camioneta">Camioneta / SUV ($4.500/h)</option>
+                        <option value="Bicicleta">Bicicleta ($1.000/h)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="flex:1; min-width:180px;">
+                    <label for="simHoras">Horas de Estancia</label>
+                    <input type="number" id="simHoras" value="2" min="1" max="72" oninput="calcularSimulacion()">
+                </div>
+
+                <div class="form-group" style="flex:1; min-width:180px;">
+                    <label for="simMinutos">Minutos Adicionales (Fracción)</label>
+                    <input type="number" id="simMinutos" value="15" min="0" max="59" oninput="calcularSimulacion()">
+                </div>
+
+                <div style="background:#0f172a; padding:0.9rem 1.5rem; border-radius:8px; border:1px solid #334155; min-width:240px; text-align:right;">
+                    <span style="font-size:0.8rem; color:#94a3b8; display:block;">Valor Estimado a Pagar:</span>
+                    <strong style="font-size:1.4rem; color:#10b981;" id="lblSimTotal">$10.500 COP</strong>
+                    <span style="font-size:0.75rem; color:#64748b; display:block;" id="lblSimDetalle">(3 horas facturadas)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             SECCIÓN 3: HISTORIAL DE VEHÍCULOS ATENDIDOS
+             ================================================================== -->
+        <div class="card-container">
+            <div class="card-header">
+                <div>
+                    <h3>Catálogo General de Vehículos Atendidos</h3>
+                    <p style="color:#94a3b8; font-size:0.85rem; margin-top:2px;">Historial consolidado de placas y clientes en el software</p>
+                </div>
+                <div style="min-width:260px;">
+                    <input type="text" id="txtBuscarVehiculo" placeholder="Buscar por placa o conductor..." 
+                           onkeyup="renderizarCatalogoVehiculos()" 
+                           style="width:100%; padding:0.6rem 1rem; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Placa</th>
+                            <th>Tipo Vehículo</th>
+                            <th>Propietario / Conductor</th>
+                            <th>Tarifa Base</th>
+                            <th>Total Visitas</th>
+                            <th>Último Ingreso</th>
+                            <th>Estado Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVehiculosCatalogoBody">
+                        <!-- Generado dinámicamente con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer institucional -->
+    <footer>
+        <div><strong>SENA - Servicio Nacional de Aprendizaje</strong> | Regional Cauca - Centro de Teleinformática y Producción Industrial</div>
+        <div>Programa: <strong>Tecnólogo en Análisis y Desarrollo de Software (ADSO)</strong> | Ficha: <strong>3336118</strong></div>
+        <div style="margin-top:0.4rem; color:#64748b;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeaderUser('userInfoBox');
+            calcularSimulacion();
+            renderizarCatalogoVehiculos();
+        });
+
+        /**
+         * Calcula dinámicamente la simulación de tarifa según horas y minutos.
+         */
+        function calcularSimulacion() {
+            const tipo = document.getElementById('simTipo').value;
+            const horas = parseInt(document.getElementById('simHoras').value) || 0;
+            const minutos = parseInt(document.getElementById('simMinutos').value) || 0;
+
+            const totalMinutos = (horas * 60) + minutos;
+            const horasFacturadas = Math.max(1, Math.ceil(totalMinutos / 60));
+
+            const tarifas = getTarifas();
+            const tarifaHora = tarifas[tipo] || 3500;
+            const total = horasFacturadas * tarifaHora;
+
+            document.getElementById('lblSimTotal').textContent = formatearMoneda(total) + ' COP';
+            document.getElementById('lblSimDetalle').textContent = `(${horasFacturadas} hora(s) facturadas - Tarifa: ${formatearMoneda(tarifaHora)}/h)`;
+        }
+
+        /**
+         * Renderiza el catálogo consolidado de vehículos registrados en el parqueadero.
+         */
+        function renderizarCatalogoVehiculos() {
+            const registros = getRegistros();
+            const filtro = (document.getElementById('txtBuscarVehiculo')?.value || '').trim().toUpperCase();
+
+            // Agrupar por placa para obtener métricas por vehículo
+            const mapaVehiculos = {};
+            registros.forEach(r => {
+                if (!mapaVehiculos[r.placa]) {
+                    mapaVehiculos[r.placa] = {
+                        placa: r.placa,
+                        tipo: r.tipo,
+                        propietario: r.propietario,
+                        tarifaAplicada: r.tarifaAplicada,
+                        visitas: 0,
+                        ultimoIngreso: r.horaIngreso,
+                        estado: r.estado
+                    };
+                }
+                mapaVehiculos[r.placa].visitas += 1;
+                if (r.estado === 'ACTIVO') {
+                    mapaVehiculos[r.placa].estado = 'ACTIVO';
+                }
+            });
+
+            let lista = Object.values(mapaVehiculos);
+            if (filtro) {
+                lista = lista.filter(v => 
+                    v.placa.toUpperCase().includes(filtro) ||
+                    v.propietario.toUpperCase().includes(filtro) ||
+                    v.tipo.toUpperCase().includes(filtro)
+                );
+            }
+
+            const tbody = document.getElementById('tablaVehiculosCatalogoBody');
+            if (!tbody) return;
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:25px; color:#94a3b8;">
+                            No se encontraron vehículos en el catálogo.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = lista.map(v => `
+                <tr>
+                    <td><span class="placa-badge">${v.placa}</span></td>
+                    <td><strong>${v.tipo}</strong></td>
+                    <td>${v.propietario}</td>
+                    <td>${formatearMoneda(v.tarifaAplicada)}/h</td>
+                    <td><span class="badge badge-info">${v.visitas} ingreso(s)</span></td>
+                    <td>${v.ultimoIngreso}</td>
+                    <td>
+                        <span class="badge ${v.estado === 'ACTIVO' ? 'badge-success' : 'badge-secondary'}">
+                            ${v.estado === 'ACTIVO' ? 'Estacionado' : 'Fuera del Patio'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

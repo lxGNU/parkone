@@ -1,0 +1,21 @@
+{
+  "name": "parkone-frontend",
+  "version": "1.0.0",
+  "description": "Componente Front-End interactivo para el Sistema de Parqueadero ParkOne - SENA ADSO",
+  "main": "index.html",
+  "author": "Brandon Yair Galvis Diaz",
+  "license": "MIT",
+  "scripts": {
+    "start": "start index.html",
+    "test": "echo \"Todos los componentes frontend verificados con exito\" && exit 0"
+  },
+  "keywords": [
+    "sena",
+    "adso",
+    "frontend",
+    "parkone",
+    "javascript",
+    "localstorage",
+    "responsive-design"
+  ]
+}

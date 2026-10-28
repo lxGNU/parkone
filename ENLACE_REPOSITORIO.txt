@@ -1,0 +1,37 @@
+================================================================================
+SERVICIO NACIONAL DE APRENDIZAJE - SENA
+TECNOLOGO EN ANALISIS Y DESARROLLO DE SOFTWARE (ADSO) - FICHA: 3336118
+EVIDENCIA GA7-220501096-AA4-EV03: COMPONENTE FRONT-END DEL PROYECTO FORMATIVO
+APRENDIZ: BRANDON YAIR GALVIS DIAZ
+SENA REGIONAL CAUCA - 2026
+================================================================================
+
+1. ENLACE DEL REPOSITORIO EN GITHUB:
+   https://github.com/lxGNU/parkone
+
+2. RAMA (BRANCH) DE LA EVIDENCIA FRONT-END:
+   https://github.com/lxGNU/parkone/tree/feature/front-end-react
+
+3. COMMIT PRINCIPAL DEL MODULO FRONT-END:
+   feat(frontend): implementacion completa del componente frontend interactivo ParkOne
+
+4. CREDENCIALES DE ACCESO DE PRUEBA (MOCK DATA):
+   - Usuario / Cedula: 1061723849
+   - Contrasena:       123456
+   - Rol Asignado:     Administrador del Sistema (Brandon Yair Galvis Diaz)
+
+5. INSTRUCCIONES DE EJECUCION RAPIDA:
+   a) Doble clic sobre el archivo ejecutable "iniciar.bat" en Windows.
+   b) O abrir directamente el archivo "index.html" en cualquier navegador (Google Chrome, Edge, Firefox).
+   c) Todos los datos y operaciones persisten localmente en el navegador mediante LocalStorage.
+
+6. MODULOS FRONT-END DESARROLLADOS Y VERIFICADOS:
+   - Panel Principal / Dashboard (index.html): Indicadores KPI cuantitativos y accesos directos.
+   - Control de Parqueadero (control.html): Entradas, salidas, validacion de duplicidad y cobro.
+   - Gestion de Vehiculos y Tarifas (vehiculos.html): Catalogo y simulador de cobro interactivo.
+   - Gestion de Usuarios y Colaboradores (usuarios.html): Altas, bajas, roles y persistencia.
+   - Consultas y Auditoria (consultas.html): Filtros por placa, categoria y estado operativo.
+   - Recibos y Comprobantes (recibos.html): Repositorio termico con impresion nativa.
+   - Autenticacion / Login (login.html): Control de acceso por credenciales.
+
+================================================================================
