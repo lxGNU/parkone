@@ -6,6 +6,8 @@
 *.rar
 *_ORIGINAL_CON_CAPTURAS.docx
 GUIA_GRABACION_*.docx
+.~lock.*
+~$*
 
 # Dependencias de paquetes y node
 node_modules/
