@@ -1,25 +1,13 @@
 /**
- * ============================================================================
- * SISTEMA DE GESTION DE PARQUEADEROS - PARKONE
- * Modulo Front-End: Control de Parqueadero (Entradas, Salidas y Cobro)
- * Archivo: js/inventario.js
- * Evidencia: GA7-220501096-AA4-EV03
- * Aprendiz: Brandon Yair Galvis Diaz
- * Ficha: 3336118 - ADSO SENA Regional Cauca - 2026
- * ============================================================================
- * Descripcion:
- * Gestiona el registro operativo de ingresos, la validacion estricta de 
- * placas duplicadas en patio, la emision de tickets termicos, y la liquidacion
- * de salidas con calculo automatico de tiempo transcurrido y tarifa.
- * ============================================================================
+ * Proyecto ParkOne - Modulo de Control de Parqueadero
+ * Logica de Entradas, Salidas y Cobro
+ * Aprendiz: Brandon Yair Galvis Diaz - SENA ADSO
  */
 
 let registroEnLiquidacion = null;
 let calculoCobroActual = null;
 
-/**
- * Alterna la visualizacion del formulario de nuevo ingreso.
- */
+// Abre o cierra el formulario para registrar un nuevo vehiculo
 function toggleFormIngreso() {
     const panel = document.getElementById('panelNuevoIngreso');
     if (!panel) return;
@@ -33,11 +21,7 @@ function toggleFormIngreso() {
     }
 }
 
-/**
- * Muestra alertas visuales de exito o error en pantalla.
- * @param {string} mensaje 
- * @param {string} tipo 'success' o 'danger'
- */
+// Muestra un mensaje verde de exito o rojo de error en pantalla
 function mostrarAlerta(mensaje, tipo = 'success') {
     const box = document.getElementById('alertaBox');
     if (!box) return;
@@ -49,17 +33,15 @@ function mostrarAlerta(mensaje, tipo = 'success') {
         </div>
     `;
 
+    // Quita el mensaje despues de 4 segundos
     setTimeout(() => {
         if (box.innerHTML.includes(mensaje)) {
             box.innerHTML = '';
         }
-    }, 4500);
+    }, 4000);
 }
 
-/**
- * Procesa el formulario de entrada vehicular con validaciones de placa.
- * @param {Event} e 
- */
+// Guarda un nuevo ingreso validando los datos del formulario
 function guardarIngreso(e) {
     e.preventDefault();
 
@@ -68,27 +50,27 @@ function guardarIngreso(e) {
     const propietario = document.getElementById('inPropietario').value.trim();
     const bahia = document.getElementById('inObservacion').value.trim() || 'General';
 
-    // 1. Validar longitud minima de placa colombiana
+    // Validamos que la placa tenga minimo 5 caracteres
     if (!placa || placa.length < 5) {
-        mostrarAlerta('La placa ingresada debe tener al menos 5 caracteres alfanumericos.', 'danger');
+        mostrarAlerta('La placa debe tener minimo 5 caracteres.', 'danger');
         document.getElementById('inPlaca').focus();
         return;
     }
 
     const registros = getRegistros();
 
-    // 2. REGLA DE NEGOCIO (HU04): Bloqueo estricto de placa duplicada en patio
+    // Validamos que el vehiculo no este ya adentro en el parqueadero (HU04)
     const yaEstaEnPatio = registros.some(r => r.placa === placa && r.estado === 'ACTIVO');
     if (yaEstaEnPatio) {
-        mostrarAlerta(`RESTRICCIÓN: El vehículo con placa [${placa}] ya se encuentra registrado actualmente dentro del parqueadero.`, 'danger');
+        mostrarAlerta(`El vehículo con placa ${placa} ya se encuentra registrado dentro del parqueadero.`, 'danger');
         document.getElementById('inPlaca').focus();
         return;
     }
 
-    // 3. Validar capacidad maxima
+    // Validamos que haya cupo disponible
     const ocupados = registros.filter(r => r.estado === 'ACTIVO').length;
     if (ocupados >= CAPACIDAD_MAXIMA) {
-        mostrarAlerta('CAPACIDAD MÁXIMA ALCANZADA: No hay bahías libres disponibles.', 'danger');
+        mostrarAlerta('No hay cupos disponibles en este momento.', 'danger');
         return;
     }
 
@@ -96,6 +78,7 @@ function guardarIngreso(e) {
     const nuevoId = registros.length > 0 ? Math.max(...registros.map(r => r.id)) + 1 : 101;
     const fechaHora = obtenerFechaHoraActual();
 
+    // Creamos el nuevo registro
     const nuevo = {
         id: nuevoId,
         placa: placa,
@@ -109,24 +92,25 @@ function guardarIngreso(e) {
         estado: 'ACTIVO'
     };
 
+    // Lo agregamos al inicio de la lista y guardamos
     registros.unshift(nuevo);
     saveRegistros(registros);
 
+    // Limpiamos y cerramos el formulario
     document.getElementById('formIngreso').reset();
     toggleFormIngreso();
     renderizarTablaControl();
 
-    mostrarAlerta(`Vehículo [${placa}] ingresado exitosamente en la celda ${bahia}.`, 'success');
+    mostrarAlerta(`Vehículo ${placa} ingresado en ${bahia}.`, 'success');
     mostrarTicketTermicoEntrada(nuevo);
 }
 
-/**
- * Renderiza la tabla de registros operativos en control.html.
- */
+// Muestra los registros en la tabla
 function renderizarTablaControl() {
     const registros = getRegistros();
     const filtro = (document.getElementById('txtBuscar')?.value || '').trim().toUpperCase();
 
+    // Filtramos si el usuario escribe en el buscador
     let filtrados = registros;
     if (filtro) {
         filtrados = registros.filter(r => 
@@ -143,7 +127,7 @@ function renderizarTablaControl() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="10" style="text-align:center; padding:25px; color:#94a3b8;">
-                    No se encontraron registros de parqueadero.
+                    No hay registros de vehículos.
                 </td>
             </tr>
         `;
@@ -167,14 +151,14 @@ function renderizarTablaControl() {
             </td>
             <td>
                 ${r.estado === 'ACTIVO' ? `
-                    <button onclick="liquidarSalida('${r.placa}')" class="btn btn-danger btn-sm" title="Cobrar salida">
+                    <button onclick="liquidarSalida('${r.placa}')" class="btn btn-danger btn-sm">
                         Cobrar Salida
                     </button>
-                    <button onclick="reimprimirTicket(${r.id})" class="btn btn-secondary btn-sm" title="Ticket de entrada">
+                    <button onclick="reimprimirTicket(${r.id})" class="btn btn-secondary btn-sm">
                         Ticket
                     </button>
                 ` : `
-                    <button onclick="reimprimirReciboFinalizado(${r.id})" class="btn btn-secondary btn-sm" title="Ver comprobante de pago">
+                    <button onclick="reimprimirReciboFinalizado(${r.id})" class="btn btn-secondary btn-sm">
                         Recibo
                     </button>
                 `}
@@ -183,45 +167,39 @@ function renderizarTablaControl() {
     `).join('');
 }
 
-/**
- * Filtra los registros por texto de placa o nombre.
- */
+// Funcion para el buscador por placa o nombre
 function filtrarRegistros() {
     renderizarTablaControl();
 }
 
-/**
- * Limpia el campo de filtro y restablece la tabla.
- */
+// Limpia el buscador y vuelve a cargar la tabla completa
 function limpiarFiltro() {
     const input = document.getElementById('txtBuscar');
     if (input) input.value = '';
     renderizarTablaControl();
 }
 
-/**
- * Despliega el modal de liquidacion calculando el tiempo transcurrido y tarifa.
- * @param {string} placa 
- */
+// Abre la ventana para cobrar y calcula el valor segun el tiempo
 function liquidarSalida(placa) {
     const registros = getRegistros();
     const r = registros.find(item => item.placa === placa && item.estado === 'ACTIVO');
 
     if (!r) {
-        mostrarAlerta(`No se encontró vehículo activo con placa ${placa}.`, 'danger');
+        mostrarAlerta(`No se encontró el vehículo con placa ${placa}.`, 'danger');
         return;
     }
 
     registroEnLiquidacion = r;
     const horaSalida = obtenerFechaHoraActual();
     
-    // Calcular tiempo
+    // Calculamos los minutos y horas transcurridas
     const inicio = new Date(r.horaIngreso.replace(' ', 'T'));
     const fin = new Date(horaSalida.replace(' ', 'T'));
     let diffMs = fin.getTime() - inicio.getTime();
     if (diffMs < 0) diffMs = 0;
     
     const diffMinutos = Math.max(1, Math.round(diffMs / 60000));
+    // Redondeamos hacia arriba para cobrar la fraccion de hora
     const horasFacturadas = Math.max(1, Math.ceil(diffMinutos / 60));
     const tarifa = Number(r.tarifaAplicada) || 3500;
     const totalPagar = horasFacturadas * tarifa;
@@ -241,10 +219,10 @@ function liquidarSalida(placa) {
         <hr style="border:none; border-top:1px dashed #334155; margin:10px 0;">
         <div><strong>Hora Entrada:</strong> ${r.horaIngreso}</div>
         <div><strong>Hora Salida:</strong> ${horaSalida}</div>
-        <div><strong>Tiempo Transcurrido:</strong> ${diffMinutos} min (${horasFacturadas} hora(s) facturadas)</div>
+        <div><strong>Tiempo:</strong> ${diffMinutos} min (${horasFacturadas} hora(s) cobradas)</div>
         <div><strong>Tarifa / Hora:</strong> $${tarifa.toLocaleString('es-CO')}</div>
         <div style="margin-top:12px; padding:12px; background:#0f172a; border-radius:8px; border:1px solid #10b981; font-size:1.2rem; font-weight:bold; color:#10b981; text-align:center;">
-            TOTAL A COBRAR: $${totalPagar.toLocaleString('es-CO')} COP
+            TOTAL A PAGAR: $${totalPagar.toLocaleString('es-CO')} COP
         </div>
     `;
 
@@ -252,9 +230,7 @@ function liquidarSalida(placa) {
     if (modal) modal.style.display = 'flex';
 }
 
-/**
- * Cierra la ventana modal de liquidación.
- */
+// Cierra la ventana de cobro
 function cerrarModalSalida() {
     const modal = document.getElementById('modalSalida');
     if (modal) modal.style.display = 'none';
@@ -262,9 +238,7 @@ function cerrarModalSalida() {
     calculoCobroActual = null;
 }
 
-/**
- * Confirma el cobro de la salida, actualiza el registro en LocalStorage y emite el recibo.
- */
+// Guarda la salida del vehiculo y muestra el recibo
 function confirmarCobroSalida() {
     if (!registroEnLiquidacion || !calculoCobroActual) return;
 
@@ -280,21 +254,18 @@ function confirmarCobroSalida() {
     cerrarModalSalida();
     renderizarTablaControl();
 
-    mostrarAlerta(`Salida de la placa [${registros[idx].placa}] registrada con éxito. Total cobrado: $${calculoCobroActual.total.toLocaleString('es-CO')}.`, 'success');
+    mostrarAlerta(`Salida registrada para la placa ${registros[idx].placa}. Total: $${calculoCobroActual.total.toLocaleString('es-CO')}.`, 'success');
     mostrarTicketTermicoSalida(registros[idx], calculoCobroActual);
 }
 
-/**
- * Muestra el ticket térmico de entrada.
- * @param {Object} r 
- */
+// Arma el ticket de entrada para imprimir
 function mostrarTicketTermicoEntrada(r) {
     const contenedor = document.getElementById('ticketContenido');
     contenedor.innerHTML = `
         <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px;">
             <h3 style="margin:0; font-size:1.2rem;">PARK ONE</h3>
-            <small>Framework Web & Móvil de Gestión de Parqueaderos</small><br>
-            <small>SENA Regional Cauca - Popayán</small><br>
+            <small>Sistema de Parqueadero</small><br>
+            <small>Popayán - SENA</small><br>
             <strong>TICKET DE ENTRADA</strong>
         </div>
         <div><strong>Ticket N°:</strong> #ENT-${r.id}</div>
@@ -303,9 +274,9 @@ function mostrarTicketTermicoEntrada(r) {
         <div><strong>Tipo:</strong> ${r.tipo}</div>
         <div><strong>Bahía:</strong> ${r.observaciones || 'General'}</div>
         <div><strong>Conductor:</strong> ${r.propietario}</div>
-        <div><strong>Tarifa Base:</strong> $${Number(r.tarifaAplicada).toLocaleString('es-CO')}/h</div>
+        <div><strong>Tarifa:</strong> $${Number(r.tarifaAplicada).toLocaleString('es-CO')}/h</div>
         <div style="text-align:center; font-size:0.75rem; margin-top:10px; border-top:1px dashed #000; padding-top:6px;">
-            Conserve este comprobante para retirar su vehículo.<br>
+            Conserve este ticket para retirar su vehículo.<br>
             ||||| ||| |||| || |||||
         </div>
     `;
@@ -313,18 +284,14 @@ function mostrarTicketTermicoEntrada(r) {
     document.getElementById('ticketModal').style.display = 'block';
 }
 
-/**
- * Muestra el comprobante térmico de salida.
- * @param {Object} r 
- * @param {Object} cobro 
- */
+// Arma el recibo de pago de salida
 function mostrarTicketTermicoSalida(r, cobro) {
     const contenedor = document.getElementById('ticketContenido');
     contenedor.innerHTML = `
         <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px;">
             <h3 style="margin:0; font-size:1.2rem;">PARK ONE</h3>
-            <small>Framework Web & Móvil de Gestión de Parqueaderos</small><br>
-            <small>SENA Regional Cauca - Popayán</small><br>
+            <small>Sistema de Parqueadero</small><br>
+            <small>Popayán - SENA</small><br>
             <strong>COMPROBANTE DE PAGO</strong>
         </div>
         <div><strong>Factura N°:</strong> #FAC-${r.id}</div>
@@ -339,7 +306,7 @@ function mostrarTicketTermicoSalida(r, cobro) {
             <span>$${cobro.total.toLocaleString('es-CO')}</span>
         </div>
         <div style="text-align:center; font-size:0.75rem;">
-            ¡Gracias por preferir a ParkOne!<br>
+            ¡Gracias por su visita!<br>
             |||| ||||| ||| |||| |||
         </div>
     `;
@@ -347,20 +314,14 @@ function mostrarTicketTermicoSalida(r, cobro) {
     document.getElementById('ticketModal').style.display = 'block';
 }
 
-/**
- * Reimprime el ticket de entrada.
- * @param {number} id 
- */
+// Vuelve a abrir el ticket de entrada
 function reimprimirTicket(id) {
     const registros = getRegistros();
     const r = registros.find(item => item.id === id);
     if (r) mostrarTicketTermicoEntrada(r);
 }
 
-/**
- * Muestra el comprobante finalizado.
- * @param {number} id 
- */
+// Vuelve a abrir el recibo de salida
 function reimprimirReciboFinalizado(id) {
     const registros = getRegistros();
     const r = registros.find(item => item.id === id);

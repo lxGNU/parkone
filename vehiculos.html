@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    <!-- Header institucional ParkOne -->
+    <!-- Encabezado -->
     <header>
         <div class="brand">
             <div class="brand-icon">P1</div>
@@ -20,7 +20,7 @@
         <div class="sub-header-info" id="userInfoBox"></div>
     </header>
 
-    <!-- Menú de navegación principal (4 módulos) -->
+    <!-- Menu principal -->
     <nav id="menu-h">
         <ul>
             <li><a href="index.html">Panel Principal</a></li>
@@ -30,7 +30,7 @@
         </ul>
     </nav>
 
-    <!-- Contenido principal -->
+    <!-- Contenido -->
     <main class="contenedor-principal">
         <div class="titulo-pagina">
             <h2>Gestión de Vehículos</h2>
@@ -52,7 +52,7 @@
                 </div>
             </div>
 
-            <!-- Tabla de vehículos registrados en el catálogo -->
+            <!-- Tabla de vehiculos -->
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
@@ -65,21 +65,21 @@
                         </tr>
                     </thead>
                     <tbody id="tablaVehiculosBody">
-                        <!-- Renderizado dinámicamente -->
+                        <!-- Se llena con javascript -->
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- Footer institucional -->
+    <!-- Pie de pagina -->
     <footer>
         <div>Popayán - Cauca</div>
         <div>SENA - Tecnólogo ADSO | Ficha: 3336118</div>
         <div style="margin-top:0.25rem;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
     </footer>
 
-    <!-- Scripts de la aplicación -->
+    <!-- Scripts -->
     <script src="js/data.js"></script>
 
     <script>
@@ -88,14 +88,12 @@
             renderizarTablaVehiculos();
         });
 
-        /**
-         * Renderiza el catálogo de vehículos registrados a partir de los datos en LocalStorage.
-         */
+        // Carga la lista de vehiculos en la tabla
         function renderizarTablaVehiculos() {
             const registros = getRegistros();
             const filtro = (document.getElementById('txtBuscarVehiculo')?.value || '').trim().toUpperCase();
 
-            // Mapear vehículos únicos por placa
+            // Agrupa por placa para mostrar los vehiculos
             const mapaVehiculos = {};
             registros.forEach(r => {
                 if (!mapaVehiculos[r.placa]) {
@@ -126,7 +124,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="5" style="text-align:center; padding:25px; color:#94a3b8;">
-                            No se encontraron vehículos registrados con ese criterio.
+                            No se encontraron vehículos.
                         </td>
                     </tr>
                 `;

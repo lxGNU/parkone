@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    <!-- Header institucional ParkOne -->
+    <!-- Encabezado -->
     <header>
         <div class="brand">
             <div class="brand-icon">P1</div>
@@ -20,7 +20,7 @@
         <div class="sub-header-info" id="userInfoBox"></div>
     </header>
 
-    <!-- Menú de navegación principal (4 módulos) -->
+    <!-- Menu principal -->
     <nav id="menu-h">
         <ul>
             <li><a href="index.html">Panel Principal</a></li>
@@ -30,7 +30,7 @@
         </ul>
     </nav>
 
-    <!-- Contenido principal -->
+    <!-- Contenido -->
     <main class="contenedor-principal">
         <div class="titulo-pagina">
             <h2>Gestión de Usuarios</h2>
@@ -51,7 +51,7 @@
                 <button type="button" onclick="toggleFormUsuario()" class="btn btn-success">+ Registrar Usuario</button>
             </div>
 
-            <!-- Formulario colapsable para nuevo colaborador -->
+            <!-- Formulario para agregar usuario -->
             <div id="panelNuevoUsuario" style="display:none; background:#0f172a; padding:1.5rem; border-radius:8px; border:1px solid #334155; margin-bottom:1.5rem;">
                 <h3 style="color:#39a900; margin-bottom:1rem; font-size:1.1rem;">Registrar Nuevo Colaborador</h3>
                 <form id="formUsuario" onsubmit="guardarUsuario(event)">
@@ -107,7 +107,7 @@
                 </form>
             </div>
 
-            <!-- Tabla de Colaboradores Registrados -->
+            <!-- Tabla de usuarios -->
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
@@ -123,21 +123,21 @@
                         </tr>
                     </thead>
                     <tbody id="tablaUsuariosBody">
-                        <!-- Filas renderizadas dinámicamente -->
+                        <!-- Se llena con javascript -->
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- Footer institucional -->
+    <!-- Pie de pagina -->
     <footer>
         <div>Popayán - Cauca</div>
         <div>SENA - Tecnólogo ADSO | Ficha: 3336118</div>
         <div style="margin-top:0.25rem;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
     </footer>
 
-    <!-- Scripts de la aplicación -->
+    <!-- Scripts -->
     <script src="js/data.js"></script>
     <script src="js/usuarios.js"></script>
 

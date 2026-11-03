@@ -1,24 +1,16 @@
 /**
- * ============================================================================
- * SISTEMA DE GESTION DE PARQUEADEROS - PARKONE
- * Modulo Front-End: Capa de Datos y Estado Global (LocalStorage)
- * Evidencia: GA7-220501096-AA4-EV03
+ * Proyecto ParkOne - Sistema de Parqueadero
+ * Modulo Front-End (JavaScript)
  * Aprendiz: Brandon Yair Galvis Diaz
- * Ficha: 3336118 - ADSO SENA Regional Cauca - 2026
- * ============================================================================
- * Descripcion:
- * Centraliza la persistencia en el cliente (LocalStorage), datos semilla
- * alineados con parkone_db, calculos de liquidacion por tarifas horarias
- * y control de sesion activa.
- * ============================================================================
+ * Ficha: 3336118 - ADSO SENA Regional Cauca
  */
 
-// Constantes de almacenamiento local (LocalStorage)
+// Nombres de las llaves para guardar en el LocalStorage
 const STORAGE_REGISTROS = 'parkone_registros_v2';
 const STORAGE_USUARIOS  = 'parkone_usuarios_v2';
 const STORAGE_AUTH      = 'parkone_auth_user';
 
-// Tarifas del parqueadero ParkOne por tipo de vehiculo (valor por hora o fraccion)
+// Tarifas por hora segun el tipo de vehiculo
 const TARIFAS_HORA = {
     'Carro': 3500,
     'Moto': 2000,
@@ -26,10 +18,10 @@ const TARIFAS_HORA = {
     'Bicicleta': 1000
 };
 
-// Capacidad total de bahias del parqueadero
+// Capacidad maxima del parqueadero
 const CAPACIDAD_MAXIMA = 50;
 
-// Datos iniciales de usuarios (acorde a parkone_db de evidencias previas)
+// Usuarios iniciales para pruebas del sistema
 const DEFAULT_USUARIOS = [
     {
         id: 1,
@@ -55,7 +47,7 @@ const DEFAULT_USUARIOS = [
     }
 ];
 
-// Datos iniciales de registros de parqueadero
+// Vehiculos iniciales cargados en el parqueadero
 const DEFAULT_REGISTROS = [
     {
         id: 101,
@@ -107,9 +99,7 @@ const DEFAULT_REGISTROS = [
     }
 ];
 
-/**
- * Inicializa las estructuras en LocalStorage si no existen.
- */
+// Revisa si ya hay datos guardados en LocalStorage, si no los crea
 function inicializarEstado() {
     try {
         if (!localStorage.getItem(STORAGE_USUARIOS)) {
@@ -122,14 +112,11 @@ function inicializarEstado() {
             localStorage.setItem(STORAGE_AUTH, JSON.stringify(DEFAULT_USUARIOS[0]));
         }
     } catch (e) {
-        console.error("Error al inicializar LocalStorage:", e);
+        console.error("Error al iniciar datos en LocalStorage:", e);
     }
 }
 
-/**
- * Obtiene el usuario autenticado actualmente.
- * @returns {Object} Usuario en sesión
- */
+// Obtiene el usuario que tiene la sesion abierta
 function getUsuarioSesion() {
     try {
         const u = localStorage.getItem(STORAGE_AUTH);
@@ -139,18 +126,13 @@ function getUsuarioSesion() {
     }
 }
 
-/**
- * Cierra la sesión activa y redirige al login.
- */
+// Cierra la sesion y manda a la pagina de login
 function cerrarSesion() {
     localStorage.removeItem(STORAGE_AUTH);
     window.location.href = 'login.html';
 }
 
-/**
- * Retorna todos los registros de parqueadero.
- * @returns {Array} Lista de registros
- */
+// Devuelve la lista de registros de vehiculos guardados
 function getRegistros() {
     try {
         const data = localStorage.getItem(STORAGE_REGISTROS);
@@ -160,18 +142,12 @@ function getRegistros() {
     }
 }
 
-/**
- * Guarda los registros de parqueadero en LocalStorage.
- * @param {Array} registros 
- */
+// Guarda la lista de registros en el LocalStorage
 function saveRegistros(registros) {
     localStorage.setItem(STORAGE_REGISTROS, JSON.stringify(registros));
 }
 
-/**
- * Calcula las estadísticas cuantitativas del Dashboard en tiempo real.
- * @returns {Object} Métricas consolidadas
- */
+// Calcula los totales del inicio: capacidad, ocupados, libres y dinero recaudado
 function getEstadisticas() {
     const registros = getRegistros();
     const activos = registros.filter(r => r.estado === 'ACTIVO');
@@ -179,7 +155,7 @@ function getEstadisticas() {
     
     const cuposOcupados = activos.length;
     const cuposDisponibles = Math.max(0, CAPACIDAD_MAXIMA - cuposOcupados);
-    const recaudoTotal = finalizados.reduce((acc, r) => acc + (Number(r.totalPagado) || 0), 0);
+    const recaudoTotal = finalizados.reduce((total, r) => total + (Number(r.totalPagado) || 0), 0);
 
     return {
         capacidadMaxima: CAPACIDAD_MAXIMA,
@@ -189,10 +165,7 @@ function getEstadisticas() {
     };
 }
 
-/**
- * Retorna los usuarios registrados.
- * @returns {Array}
- */
+// Devuelve los usuarios registrados
 function getUsuarios() {
     try {
         const data = localStorage.getItem(STORAGE_USUARIOS);
@@ -202,28 +175,19 @@ function getUsuarios() {
     }
 }
 
-/**
- * Guarda los usuarios en LocalStorage.
- * @param {Array} usuarios 
- */
+// Guarda los usuarios actualizados en el LocalStorage
 function saveUsuarios(usuarios) {
     localStorage.setItem(STORAGE_USUARIOS, JSON.stringify(usuarios));
 }
 
-/**
- * Retorna la fecha y hora actual en formato YYYY-MM-DD HH:mm:ss.
- * @returns {string}
- */
+// Obtiene la fecha y hora del sistema en formato año-mes-dia hora:minuto:segundo
 function obtenerFechaHoraActual() {
     const ahora = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())} ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
+    const dosDigitos = (n) => String(n).padStart(2, '0');
+    return `${ahora.getFullYear()}-${dosDigitos(ahora.getMonth() + 1)}-${dosDigitos(ahora.getDate())} ${dosDigitos(ahora.getHours())}:${dosDigitos(ahora.getMinutes())}:${dosDigitos(ahora.getSeconds())}`;
 }
 
-/**
- * Renderiza el bloque del usuario en sesión en la cabecera institucional.
- * @param {string} contenedorId 
- */
+// Muestra el nombre del usuario y el boton de salir arriba en la cabecera
 function renderHeaderUser(contenedorId = 'userInfoBox') {
     const box = document.getElementById(contenedorId);
     if (!box) return;
@@ -237,5 +201,5 @@ function renderHeaderUser(contenedorId = 'userInfoBox') {
     }
 }
 
-// Inicializar el estado de inmediato
+// Se ejecuta al cargar el archivo para asegurar que los datos existan
 inicializarEstado();

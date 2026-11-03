@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ParkOne Framework | Panel Principal</title>
-    <!-- Hoja de estilos del sistema ParkOne -->
+    <!-- Estilos del proyecto -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <!-- Header institucional ParkOne -->
+    <!-- Encabezado con logo y usuario -->
     <header>
         <div class="brand">
             <div class="brand-icon">P1</div>
@@ -18,13 +18,10 @@
                 <small style="color:#9ca3af;">Framework Web & Móvil</small>
             </div>
         </div>
-        <!-- Información de sesión activa del operador cargada con data.js -->
-        <div class="sub-header-info" id="userInfoBox">
-            <!-- Renderizado dinámicamente -->
-        </div>
+        <div class="sub-header-info" id="userInfoBox"></div>
     </header>
 
-    <!-- Menú de navegación principal con los 4 módulos oficiales -->
+    <!-- Menu de navegacion -->
     <nav id="menu-h">
         <ul>
             <li><a href="index.html" class="active">Panel Principal</a></li>
@@ -41,7 +38,7 @@
             <p>Móvil y Web - Sistema de Gestión de Parqueaderos ParkOne</p>
         </div>
 
-        <!-- Tarjetas de estadísticas cuantitativas del Dashboard (KPIs en tiempo real) -->
+        <!-- Tarjetas con las estadisticas del parqueadero -->
         <div class="dashboard-grid">
             <div class="stat-card blue">
                 <div class="stat-title">Capacidad Total</div>
@@ -68,7 +65,7 @@
             </div>
         </div>
 
-        <!-- Tabla de vehículos actualmente estacionados en patio -->
+        <!-- Tabla con los vehiculos que estan adentro en patio -->
         <div class="card-container">
             <div class="card-header">
                 <h3>Vehículos Actualmente en Patio (Cupos Activos)</h3>
@@ -91,39 +88,34 @@
                         </tr>
                     </thead>
                     <tbody id="tablaDashboardBody">
-                        <!-- Filas renderizadas dinámicamente con JavaScript -->
+                        <!-- Los datos se cargan con javascript -->
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
-    <!-- Pie de página institucional -->
+    <!-- Pie de pagina -->
     <footer>
         <div>Popayán - Cauca</div>
         <div>SENA - Tecnólogo ADSO | Ficha: 3336118</div>
         <div style="margin-top:0.25rem;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
     </footer>
 
-    <!-- Capa de datos y persistencia en LocalStorage -->
+    <!-- Scripts de la aplicacion -->
     <script src="js/data.js"></script>
 
-    <!-- Lógica de control del Dashboard -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Cargar usuario en sesión
+            // Muestra los datos del usuario en la parte superior
             renderHeaderUser();
 
-            // 2. Cargar indicadores numéricos del Dashboard
+            // Carga los numeros de las tarjetas y la tabla
             actualizarEstadisticas();
-
-            // 3. Renderizar listado de vehículos activos
             renderizarVehiculosActivos();
         });
 
-        /**
-         * Actualiza las 4 tarjetas de estadísticas con datos de LocalStorage.
-         */
+        // Pone los totales en las 4 tarjetas
         function actualizarEstadisticas() {
             const stats = getEstadisticas();
             document.getElementById('lblCapacidad').textContent = stats.capacidadMaxima;
@@ -132,9 +124,7 @@
             document.getElementById('lblRecaudo').textContent = '$' + stats.recaudoTotal.toLocaleString('es-CO');
         }
 
-        /**
-         * Muestra en la tabla los automotores que se encuentran en el patio.
-         */
+        // Pone los vehiculos activos en la tabla
         function renderizarVehiculosActivos() {
             const registros = getRegistros();
             const activos = registros.filter(r => r.estado === 'ACTIVO');
@@ -157,7 +147,7 @@
                     <td><strong style="color:#60a5fa;">${r.placa}</strong></td>
                     <td>${r.tipo}</td>
                     <td>${r.propietario}</td>
-                    <td><span style="color:#4ade80; font-weight:bold;">${r.bahia || r.observaciones || 'General'}</span></td>
+                    <td><span style="color:#4ade80; font-weight:bold;">${r.observaciones || 'General'}</span></td>
                     <td>${r.horaIngreso}</td>
                     <td>$${Number(r.tarifaAplicada).toLocaleString('es-CO')}</td>
                     <td><span class="badge badge-parked">Estacionado</span></td>

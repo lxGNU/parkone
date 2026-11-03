@@ -8,6 +8,7 @@
 </head>
 <body style="display:flex; align-items:center; justify-content:center; min-height:100vh; background-color:#0f172a;">
 
+    <!-- Tarjeta de login -->
     <div class="login-card" style="background:#1e293b; border:1px solid #334155; padding:2.5rem; border-radius:12px; width:100%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.3);">
         <div style="text-align:center; margin-bottom:1.5rem;">
             <div class="brand-icon" style="margin:0 auto 10px auto; width:50px; height:50px; font-size:1.4rem;">P1</div>
@@ -41,6 +42,7 @@
 
     <script src="js/data.js"></script>
     <script>
+        // Valida que el usuario exista y la clave sea correcta
         function iniciarSesion(e) {
             e.preventDefault();
             const cedula = document.getElementById('txtCedula').value.trim();

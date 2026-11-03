@@ -1,22 +1,9 @@
 /**
- * ============================================================================
- * SISTEMA DE GESTION DE PARQUEADEROS - PARKONE
- * Modulo Front-End: Gestion y Registro de Usuarios / Colaboradores
- * Archivo: js/usuarios.js
- * Evidencia: GA7-220501096-AA4-EV03
- * Aprendiz: Brandon Yair Galvis Diaz
- * Ficha: 3336118 - ADSO SENA Regional Cauca - 2026
- * ============================================================================
- * Descripcion:
- * Este script implementa la logica de interaccion, validacion de campos en 
- * tiempo real, captura de eventos y persistencia en LocalStorage para el 
- * modulo de colaboradores del software ParkOne.
- * ============================================================================
+ * Proyecto ParkOne - Modulo de Gestion de Usuarios
+ * Aprendiz: Brandon Yair Galvis Diaz - SENA ADSO
  */
 
-/**
- * Alterna la visualizacion del panel para nuevo colaborador.
- */
+// Abre o cierra el formulario para agregar un nuevo usuario
 function toggleFormUsuario() {
     const panel = document.getElementById('panelNuevoUsuario');
     if (!panel) return;
@@ -30,11 +17,7 @@ function toggleFormUsuario() {
     }
 }
 
-/**
- * Muestra alertas visuales temporales.
- * @param {string} mensaje 
- * @param {string} tipo 'success' o 'danger'
- */
+// Muestra mensajes de alerta en pantalla
 function mostrarAlertaUsuario(mensaje, tipo = 'success') {
     const box = document.getElementById('alertaBox');
     if (!box) return;
@@ -50,13 +33,10 @@ function mostrarAlertaUsuario(mensaje, tipo = 'success') {
         if (box.innerHTML.includes(mensaje)) {
             box.innerHTML = '';
         }
-    }, 4500);
+    }, 4000);
 }
 
-/**
- * Procesa el formulario de registro de colaborador con validaciones.
- * @param {Event} e 
- */
+// Guarda un nuevo colaborador validando los campos
 function guardarUsuario(e) {
     e.preventDefault();
 
@@ -69,24 +49,24 @@ function guardarUsuario(e) {
     const telefono = document.getElementById('inTelefono').value.trim();
     const direccion = document.getElementById('inDireccion').value.trim() || 'Popayán, Cauca';
 
-    // 1. Validar campos requeridos
+    // Validamos que no queden campos en blanco
     if (!cedula || !nombres || !apellidos || !cargo || !correo || !telefono) {
-        mostrarAlertaUsuario('Por favor complete todos los campos obligatorios (*).', 'danger');
+        mostrarAlertaUsuario('Por favor llene todos los campos obligatorios.', 'danger');
         return;
     }
 
-    // 2. Validar cedula numerica
+    // Validamos que la cedula contenga solo numeros
     if (!/^\d{6,12}$/.test(cedula)) {
-        mostrarAlertaUsuario('La cédula debe ser numérica y contener entre 6 y 12 dígitos.', 'danger');
+        mostrarAlertaUsuario('La cédula debe ser numérica de 6 a 12 dígitos.', 'danger');
         document.getElementById('inCedula').focus();
         return;
     }
 
     const usuarios = getUsuarios();
 
-    // 3. Validar cedula duplicada
+    // Validamos que la cedula no este registrada
     if (usuarios.some(u => u.identificacion === cedula)) {
-        mostrarAlertaUsuario(`Ya existe un colaborador registrado con la cédula ${cedula}.`, 'danger');
+        mostrarAlertaUsuario(`Ya existe un usuario con la cédula ${cedula}.`, 'danger');
         document.getElementById('inCedula').focus();
         return;
     }
@@ -111,12 +91,10 @@ function guardarUsuario(e) {
     toggleFormUsuario();
     renderizarTablaUsuarios();
 
-    mostrarAlertaUsuario(`Colaborador ${nombres} ${apellidos} registrado exitosamente.`, 'success');
+    mostrarAlertaUsuario(`Usuario ${nombres} ${apellidos} registrado con éxito.`, 'success');
 }
 
-/**
- * Renderiza la tabla de colaboradores.
- */
+// Carga la lista de usuarios en la tabla
 function renderizarTablaUsuarios() {
     const usuarios = getUsuarios();
     const filtro = (document.getElementById('txtBuscarUser')?.value || '').trim().toUpperCase();
@@ -139,7 +117,7 @@ function renderizarTablaUsuarios() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="8" style="text-align:center; padding:25px; color:#94a3b8;">
-                    No se encontraron colaboradores registrados.
+                    No se encontraron usuarios.
                 </td>
             </tr>
         `;
@@ -165,7 +143,7 @@ function renderizarTablaUsuarios() {
                     ${u.identificacion === '1061723849' ? `
                         <span style="color:#64748b; font-size:0.75rem;">(Principal)</span>
                     ` : `
-                        <button onclick="eliminarUsuario(${u.id})" class="btn btn-danger btn-sm" title="Eliminar usuario">
+                        <button onclick="eliminarUsuario(${u.id})" class="btn btn-danger btn-sm">
                             Eliminar
                         </button>
                     `}
@@ -175,26 +153,19 @@ function renderizarTablaUsuarios() {
     }).join('');
 }
 
-/**
- * Filtra los usuarios en tiempo real.
- */
+// Filtro de busqueda por cedula o nombre
 function filtrarUsuarios() {
     renderizarTablaUsuarios();
 }
 
-/**
- * Limpia el filtro de usuarios.
- */
+// Limpia el buscador de usuarios
 function limpiarFiltroUser() {
     const input = document.getElementById('txtBuscarUser');
     if (input) input.value = '';
     renderizarTablaUsuarios();
 }
 
-/**
- * Elimina un usuario con confirmacion.
- * @param {number} id 
- */
+// Elimina un usuario pidiendo confirmacion
 function eliminarUsuario(id) {
     const usuarios = getUsuarios();
     const u = usuarios.find(item => item.id === id);
@@ -205,10 +176,10 @@ function eliminarUsuario(id) {
         return;
     }
 
-    if (!confirm(`¿Está seguro de eliminar a ${u.nombres} ${u.apellidos}?`)) return;
+    if (!confirm(`¿Desea eliminar al usuario ${u.nombres} ${u.apellidos}?`)) return;
 
     const actualizados = usuarios.filter(item => item.id !== id);
     saveUsuarios(actualizados);
     renderizarTablaUsuarios();
-    mostrarAlertaUsuario(`Colaborador ${u.nombres} eliminado correctamente.`, 'success');
+    mostrarAlertaUsuario(`Usuario ${u.nombres} eliminado.`, 'success');
 }
