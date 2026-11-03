@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkOne Framework | Iniciar Sesión</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="display:flex; align-items:center; justify-content:center; min-height:100vh; background-color:#0f172a;">
+
+    <!-- Tarjeta de login -->
+    <div class="login-card" style="background:#1e293b; border:1px solid #334155; padding:2.5rem; border-radius:12px; width:100%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.3);">
+        <div style="text-align:center; margin-bottom:1.5rem;">
+            <div class="brand-icon" style="margin:0 auto 10px auto; width:50px; height:50px; font-size:1.4rem;">P1</div>
+            <h2 style="font-size:1.6rem; font-weight:700;">Park<span style="color:#39a900;">One</span></h2>
+            <p style="color:#94a3b8; font-size:0.85rem; margin-top:4px;">Sistema de Parqueaderos - Acceso Operativo</p>
+        </div>
+
+        <div id="alertaLogin"></div>
+
+        <form onsubmit="iniciarSesion(event)">
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label style="color:#94a3b8; font-size:0.85rem; display:block; margin-bottom:4px;">Número de Cédula *</label>
+                <input type="text" id="txtCedula" value="1061723849" required style="width:100%; padding:0.75rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem;">
+                <label style="color:#94a3b8; font-size:0.85rem; display:block; margin-bottom:4px;">Contraseña *</label>
+                <input type="password" id="txtClave" value="123456" required style="width:100%; padding:0.75rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem; font-weight:bold; font-size:1rem;">
+                Ingresar al Sistema
+            </button>
+        </form>
+
+        <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid #334155; text-align:center; font-size:0.8rem; color:#64748b;">
+            Credenciales de prueba:<br>
+            Cédula: <strong>1061723849</strong> | Clave: <strong>123456</strong>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        // Valida que el usuario exista y la clave sea correcta
+        function iniciarSesion(e) {
+            e.preventDefault();
+            const cedula = document.getElementById('txtCedula').value.trim();
+            const clave = document.getElementById('txtClave').value.trim();
+
+            const usuarios = getUsuarios();
+            const encontrado = usuarios.find(u => u.identificacion === cedula);
+
+            if (encontrado && clave === "123456") {
+                localStorage.setItem(STORAGE_AUTH, JSON.stringify(encontrado));
+                window.location.href = "index.html";
+            } else {
+                const box = document.getElementById('alertaLogin');
+                box.innerHTML = `
+                    <div style="padding:10px; margin-bottom:1rem; border-radius:6px; background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#fff; font-size:0.85rem; text-align:center;">
+                        ⚠ Cédula o contraseña incorrecta.
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

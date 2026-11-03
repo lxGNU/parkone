@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkOne Framework | Gestión Vehículos</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">P1</div>
+            <div>
+                <h1>Park<span>One</span></h1>
+                <small style="color:#9ca3af;">Framework Web & Móvil</small>
+            </div>
+        </div>
+        <div class="sub-header-info" id="userInfoBox"></div>
+    </header>
+
+    <!-- Menu principal -->
+    <nav id="menu-h">
+        <ul>
+            <li><a href="index.html">Panel Principal</a></li>
+            <li><a href="control.html">Control Parqueadero</a></li>
+            <li><a href="vehiculos.html" class="active">Gestión Vehículos</a></li>
+            <li><a href="usuarios.html">Gestión Usuarios</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="contenedor-principal">
+        <div class="titulo-pagina">
+            <h2>Gestión de Vehículos</h2>
+            <p>Módulo de vehículos y tarifas por categoría</p>
+        </div>
+
+        <div id="alertaVehiculo"></div>
+
+        <div class="card-container">
+            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+                <div style="color:#94a3b8; font-size:0.9rem;">
+                    Tarifas Vigentes: <strong>Carro: $3.500/h</strong> | <strong>Moto: $2.000/h</strong> | <strong>Camioneta: $4.500/h</strong> | <strong>Bici: $1.000/h</strong>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    <input type="text" id="txtBuscarVehiculo" placeholder="Buscar por placa o conductor..." 
+                           onkeyup="renderizarTablaVehiculos()" 
+                           style="padding:0.6rem 1rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#fff;">
+                    <a href="control.html" class="btn btn-primary btn-sm">+ Ir a Control de Patio</a>
+                </div>
+            </div>
+
+            <!-- Tabla de vehiculos -->
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Placa</th>
+                            <th>Tipo Vehículo</th>
+                            <th>Propietario Asociado</th>
+                            <th>Tarifa Base / Hora</th>
+                            <th>Estado Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVehiculosBody">
+                        <!-- Se llena con javascript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pie de pagina -->
+    <footer>
+        <div>Popayán - Cauca</div>
+        <div>SENA - Tecnólogo ADSO | Ficha: 3336118</div>
+        <div style="margin-top:0.25rem;">Evidencia GA7-220501096-AA4-EV03 &copy; 2026 - Aprendiz: Brandon Yair Galvis Díaz</div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeaderUser();
+            renderizarTablaVehiculos();
+        });
+
+        // Carga la lista de vehiculos en la tabla
+        function renderizarTablaVehiculos() {
+            const registros = getRegistros();
+            const filtro = (document.getElementById('txtBuscarVehiculo')?.value || '').trim().toUpperCase();
+
+            // Agrupa por placa para mostrar los vehiculos
+            const mapaVehiculos = {};
+            registros.forEach(r => {
+                if (!mapaVehiculos[r.placa]) {
+                    mapaVehiculos[r.placa] = {
+                        placa: r.placa,
+                        tipo: r.tipo,
+                        propietario: r.propietario,
+                        tarifaAplicada: r.tarifaAplicada,
+                        estado: r.estado
+                    };
+                }
+                if (r.estado === 'ACTIVO') {
+                    mapaVehiculos[r.placa].estado = 'ACTIVO';
+                }
+            });
+
+            let lista = Object.values(mapaVehiculos);
+            if (filtro) {
+                lista = lista.filter(v => 
+                    v.placa.toUpperCase().includes(filtro) ||
+                    v.propietario.toUpperCase().includes(filtro) ||
+                    v.tipo.toUpperCase().includes(filtro)
+                );
+            }
+
+            const tbody = document.getElementById('tablaVehiculosBody');
+            if (lista.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:25px; color:#94a3b8;">
+                            No se encontraron vehículos.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = lista.map(v => `
+                <tr>
+                    <td><strong style="color:#60a5fa;">${v.placa}</strong></td>
+                    <td>${v.tipo}</td>
+                    <td>${v.propietario}</td>
+                    <td>$${Number(v.tarifaAplicada).toLocaleString('es-CO')} COP</td>
+                    <td>
+                        <span class="badge ${v.estado === 'ACTIVO' ? 'badge-parked' : 'badge-user'}">
+                            ${v.estado === 'ACTIVO' ? 'Estacionado' : 'Fuera del Patio'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
