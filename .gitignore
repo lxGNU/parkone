@@ -1,4 +1,13 @@
-# Dependencias de paquetes
+# Documentos e informes (para entrega en ZIP, no en el repositorio de código)
+*.docx
+*.pdf
+*.mp4
+*.zip
+*.rar
+*_ORIGINAL_CON_CAPTURAS.docx
+GUIA_GRABACION_*.docx
+
+# Dependencias de paquetes y node
 node_modules/
 package-lock.json
 
@@ -6,16 +15,24 @@ package-lock.json
 dist/
 build/
 .vite/
+bin/
+target/
+*.class
 
-# Archivos del sistema operativo
+# Entorno e IDEs
+.idea/
+.settings/
+.classpath
+.project
+.vscode/
+*.iml
+
+# Archivos del sistema operativo y temporales
 Thumbs.db
 Desktop.ini
 .DS_Store
-
-# Logs y volcados temporales
 *.log
 *.tmp
 temp_doc_text.txt
 _temp_extract/
 _temp_imgs/
-
