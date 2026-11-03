@@ -1,67 +1,41 @@
-# Componente Front-End - Sistema de Gestión de Parqueadero ParkOne
+# ParkOne - Componente Front-End
 
-**Programa:** Tecnólogo en Análisis y Desarrollo de Software (ADSO)  
-**Ficha:** 3336118  
-**Evidencia:** GA7-220501096-AA4-EV03  
-**Aprendiz:** Brandon Yair Galvis Díaz  
-**SENA Regional Cauca - 2026**  
+Proyecto formativo del programa Tecnólogo en Análisis y Desarrollo de Software (ADSO).
+Evidencia: GA7-220501096-AA4-EV03.
+Aprendiz: Brandon Yair Galvis Díaz
+Ficha: 3336118
+SENA Regional Cauca - Popayán, 2026
 
----
+## Descripción del Proyecto
 
-## 📌 Descripción
+Este proyecto contiene la codificación del componente front-end para el sistema de parqueadero ParkOne. Toma como base los módulos, historias de usuario y el diseño desarrollados en las evidencias anteriores (fase GA6 y evidencia GA7-AA3-EV02).
 
-Este proyecto contiene la codificación del componente front-end del software formativo **ParkOne**, articulando los artefactos del ciclo de software previos (historias de usuario, diagramas de casos de uso, diseños prototipo y modelo de datos relacional).
+La aplicación fue desarrollada utilizando HTML5, CSS3 y JavaScript, permitiendo registrar la entrada de vehículos, calcular el cobro de la salida según el tiempo de permanencia, validar que no se ingresen placas repetidas, emitir tickets e imprimir comprobantes, además de gestionar los usuarios y las tarifas del parqueadero.
 
-La solución fue implementada en **HTML5 semántico, CSS3 modular (Dark theme y verde SENA) y JavaScript**, con persistencia en **LocalStorage**, comentarios descriptivos en el código y gestión bajo control de versiones con **Git**.
+Los datos se almacenan en el navegador mediante LocalStorage para que la información se mantenga al recargar o navegar entre las diferentes páginas.
 
----
+## Estructura de Archivos
 
-## 🚀 Ejecución Rápida
+- `index.html`: Panel principal con las tarjetas de cupos ocupados, libres, capacidad y dinero recaudado.
+- `control.html`: Módulo operativo de control de entradas, salidas, cobro de tarifas y ticket térmico.
+- `vehiculos.html`: Catálogo de tarifas por hora según el tipo de vehículo (carro, moto, camioneta y bicicleta).
+- `usuarios.html`: Formulario para registrar colaboradores y tabla con roles de Administrador u Operador.
+- `login.html`: Pantalla de inicio de sesión con validación de credenciales.
+- `css/style.css`: Hoja de estilos de la aplicación (tema oscuro y verde institucional del SENA).
+- `js/data.js`: Archivo con los datos iniciales y las funciones para guardar y leer en LocalStorage.
+- `js/inventario.js`: Lógica de JavaScript para el registro de entradas, validación de placas y liquidación de salidas.
+- `js/usuarios.js`: Lógica de JavaScript para el registro y consulta de colaboradores.
+- `iniciar.bat`: Archivo para abrir la aplicación de forma rápida con doble clic en Windows.
+- `ENLACE_REPOSITORIO.txt`: Archivo con el enlace del repositorio GitHub y las credenciales de prueba.
 
-1. Dar doble clic en el archivo `iniciar.bat` o abrir `index.html` en el navegador.
-2. **Credenciales de prueba:**
-   - **Cédula:** `1061723849`
-   - **Clave:** `123456`
+## Instrucciones para Ejecutar la Aplicación
 
----
+1. En Windows, hacer doble clic en el archivo `iniciar.bat` o abrir el archivo `index.html` con cualquier navegador web (Google Chrome, Microsoft Edge, Mozilla Firefox).
+2. Para acceder al sistema se pueden usar las credenciales de prueba:
+   - Cédula: `1061723849`
+   - Contraseña: `123456`
 
-## 📂 Estructura del Proyecto
+## Repositorio en GitHub
 
-```text
-GA7-220501096-AA4-EV03/
-├── .git/                    # Repositorio de control de versiones Git
-├── .gitignore               # Archivos excluidos de Git
-├── css/
-│   └── style.css            # Estilos del sistema ParkOne (Dark theme y verde SENA)
-├── js/
-│   ├── data.js              # Capa de datos, estado global (LocalStorage) y tarifas
-│   ├── inventario.js        # Lógica de taquilla, entradas, salidas y tickets
-│   └── usuarios.js          # Lógica de gestión de usuarios y colaboradores
-├── images/                  # Recursos gráficos del sistema ParkOne
-├── index.html               # Panel Principal / Dashboard con estadísticas en tiempo real
-├── control.html             # Módulo de Control de Parqueadero (Entradas, Salidas y Cobro)
-├── usuarios.html            # Módulo de Gestión de Usuarios y Colaboradores
-├── vehiculos.html           # Módulo de Catálogo Vehicular y Tarifas Vigentes
-├── login.html               # Módulo de Inicio de Sesión de Operadores
-├── iniciar.bat              # Script para ejecución rápida con doble clic
-├── ENLACE_REPOSITORIO.txt   # Enlaces del repositorio GitHub y credenciales
-├── package.json             # Manifiesto del proyecto
-└── README.md                # Documentación técnica
-```
-
----
-
-## 🛠 Módulos Desarrollados
-
-1. **Panel Principal (`index.html`):** 4 tarjetas de estadísticas dinámicas (Capacidad Total 50 bahías, Ocupados, Libres y Recaudo) y tabla en vivo de vehículos activos en patio.
-2. **Control Parqueadero (`control.html`):** Formulario de registro de entrada con validación de placa no duplicada en patio, emisión de ticket térmico imprimible y liquidación automática de cobro de salida.
-3. **Gestión de Vehículos (`vehiculos.html`):** Catálogo de tarifas vigentes por categoría (Carro $3.500/h, Moto $2.000/h, Camioneta $4.500/h, Bici $1.000/h) y tabla de vehículos.
-4. **Gestión de Usuarios (`usuarios.html`):** Registro y consulta de personal con asignación de roles (Administrador y Operador).
-5. **Inicio de Sesión (`login.html`):** Autenticación y control de acceso con LocalStorage.
-
----
-
-## 🌿 Control de Versiones (Git)
-
-- **Repositorio:** [https://github.com/lxGNU/parkone](https://github.com/lxGNU/parkone)
-- **Rama:** `feature/front-end-react`
+- Repositorio: https://github.com/lxGNU/parkone
+- Rama: feature/front-end-react

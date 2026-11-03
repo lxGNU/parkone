@@ -1,28 +1,41 @@
-ENLACE DEL REPOSITORIO Y COMPONENTE FRONT-END - EVIDENCIA GA7-220501096-AA4-EV03
+SERVICIO NACIONAL DE APRENDIZAJE - SENA
+REGIONAL CAUCA - CENTRO DE TELEINFORMATICA Y PRODUCCION INDUSTRIAL
+TECNOLOGO EN ANALISIS Y DESARROLLO DE SOFTWARE (ADSO) - FICHA 3336118
 
-Enlace del Repositorio en GitHub:
-https://github.com/lxGNU/parkone
-
-Rama (Branch) de esta evidencia:
-https://github.com/lxGNU/parkone/tree/feature/front-end-react
-
-Instrucciones para ejecutar el componente Front-End:
-
-1. Ejecucion Rapida:
-   - Dar doble clic en el archivo "iniciar.bat" o abrir directamente "index.html" en cualquier navegador web.
-   - La aplicacion cargara inmediatamente con todos los datos y funciones activas.
-
-2. Credenciales de acceso de prueba:
-   - Cedula: 1061723849
-   - Clave:  123456
-
-3. Modulos incluidos en la entrega:
-   - Panel Principal / Dashboard (index.html): Estadisticas en vivo: Capacidad (50), Ocupados, Libres y Recaudo acumulado.
-   - Control Parqueadero (control.html): Registro de entrada con placa y tipo de vehiculo, comprobante/ticket de cobro y liquidacion de salidas.
-   - Gestion Vehiculos (vehiculos.html): Catalogo de tarifas vigentes y vehiculos registrados.
-   - Gestion Usuarios (usuarios.html): Administracion de colaboradores con roles de Administrador y Operador.
-   - Inicio de Sesion (login.html): Autenticacion con control de acceso.
+EVIDENCIA GA7-220501096-AA4-EV03
+Componente front-end del proyecto formativo y proyectos de clase
 
 Aprendiz: Brandon Yair Galvis Diaz
-Ficha: 3336118 - Tecnologo en Analisis y Desarrollo de Software (ADSO)
-SENA Regional Cauca - 2026
+Cedula: 1061723849
+Proyecto: Sistema de Parqueadero ParkOne
+Popayan, Cauca - 2026
+
+--------------------------------------------------------------------------------
+1. ENLACE DEL REPOSITORIO EN GITHUB
+--------------------------------------------------------------------------------
+Repositorio general del proyecto:
+https://github.com/lxGNU/parkone
+
+Rama con la codificacion front-end:
+https://github.com/lxGNU/parkone/tree/feature/front-end-react
+
+--------------------------------------------------------------------------------
+2. INSTRUCCIONES DE EJECUCION
+--------------------------------------------------------------------------------
+Para probar el proyecto front-end en Windows:
+- Se puede dar doble clic en el archivo "iniciar.bat" para abrir directamente la aplicacion en el navegador web predeterminado.
+- O abrir directamente el archivo "index.html" con cualquier navegador (Chrome, Edge o Firefox).
+
+Credenciales de prueba para iniciar sesion (login.html):
+- Cedula: 1061723849
+- Clave:  123456
+(Corresponde al usuario Administrador Brandon Yair Galvis Diaz).
+
+--------------------------------------------------------------------------------
+3. MODULOS FRONT-END DESARROLLADOS
+--------------------------------------------------------------------------------
+- index.html: Panel principal con las tarjetas de capacidad, vehiculos en patio, cupos libres y total recaudado.
+- control.html: Modulo para registrar la entrada de vehiculos, validar placas duplicadas, cobrar salidas e imprimir tickets.
+- vehiculos.html: Modulo para ver las tarifas por hora de cada tipo de vehiculo y los vehiculos registrados.
+- usuarios.html: Modulo para registrar y consultar colaboradores con roles de Administrador u Operador.
+- login.html: Pantalla de inicio de sesion con validacion de cedula y clave.
